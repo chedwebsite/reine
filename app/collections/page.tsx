@@ -2,86 +2,27 @@
 
 import Link from 'next/link'
 import { ShoppingCart, Heart } from 'lucide-react'
-import { useState } from 'react'
-
-const products = [
-  {
-    id: '1',
-    name: 'Silk Evening Gown',
-    category: 'Haute Couture',
-    price: 250000,
-    image: 'https://images.unsplash.com/photo-1595777707802-52ca3d0cedc1?w=500&h=600&fit=crop',
-    rating: 5,
-    reviews: 24,
-  },
-  {
-    id: '2',
-    name: 'Luxury Handbag',
-    category: 'Accessories',
-    price: 150000,
-    image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500&h=600&fit=crop',
-    rating: 4.8,
-    reviews: 18,
-  },
-  {
-    id: '3',
-    name: 'Diamond Earrings',
-    category: 'Jewelry',
-    price: 450000,
-    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500&h=600&fit=crop',
-    rating: 5,
-    reviews: 12,
-  },
-  {
-    id: '4',
-    name: 'Tailored Blazer',
-    category: 'Haute Couture',
-    price: 180000,
-    image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=500&h=600&fit=crop',
-    rating: 4.9,
-    reviews: 31,
-  },
-  {
-    id: '5',
-    name: 'Gold Bracelet',
-    category: 'Jewelry',
-    price: 320000,
-    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500&h=600&fit=crop',
-    rating: 4.8,
-    reviews: 22,
-  },
-  {
-    id: '6',
-    name: 'Designer Shoes',
-    category: 'Accessories',
-    price: 120000,
-    image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500&h=600&fit=crop',
-    rating: 4.7,
-    reviews: 15,
-  },
-  {
-    id: '7',
-    name: 'Pearl Necklace',
-    category: 'Jewelry',
-    price: 280000,
-    image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=500&h=600&fit=crop',
-    rating: 5,
-    reviews: 19,
-  },
-  {
-    id: '8',
-    name: 'Cashmere Scarf',
-    category: 'Accessories',
-    price: 85000,
-    image: 'https://images.unsplash.com/photo-1520274031891-04a8d3707e2d?w=500&h=600&fit=crop',
-    rating: 4.9,
-    reviews: 28,
-  },
-]
+import { useState, useEffect } from 'react'
+import { supabase, type Product } from '@/lib/supabase'
 
 export default function CollectionsPage() {
   const [cart, setCart] = useState<any[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchProducts() {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('category')
+      if (error) console.error('Supabase error:', error)
+      if (data) setProducts(data)
+      setLoading(false)
+    }
+    fetchProducts()
+  }, [])
 
   const categories = ['Haute Couture', 'Accessories', 'Jewelry']
   const filteredProducts = selectedCategory
@@ -185,8 +126,25 @@ export default function CollectionsPage() {
         </div>
 
         {/* Products Grid */}
+        {loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="border border-border rounded-sm overflow-hidden animate-pulse">
+                <div className="h-72 bg-secondary" />
+                <div className="p-4 space-y-3">
+                  <div className="h-3 bg-secondary rounded w-1/3" />
+                  <div className="h-5 bg-secondary rounded w-2/3" />
+                  <div className="h-3 bg-secondary rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {!loading && filteredProducts.length === 0 && (
+          <p className="text-center text-muted-foreground py-24">No products found.</p>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {filteredProducts.map(product => (
+          {!loading && filteredProducts.map(product => (
             <div
               key={product.id}
               className="group border border-border rounded-sm overflow-hidden hover:border-accent transition"
