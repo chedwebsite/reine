@@ -2,15 +2,41 @@
 
 import { useEffect, useState } from 'react'
 
+const STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled']
+
+const statusStyles: Record<string, string> = {
+  pending:    'bg-yellow-900/40 text-yellow-400',
+  paid:       'bg-green-900/40 text-green-400',
+  processing: 'bg-blue-900/40 text-blue-400',
+  shipped:    'bg-purple-900/40 text-purple-400',
+  delivered:  'bg-emerald-900/40 text-emerald-400',
+  cancelled:  'bg-red-900/40 text-red-400',
+}
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [updating, setUpdating] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/admin/orders')
       .then(r => r.ok ? r.json() : [])
       .then(data => { setOrders(data); setLoading(false) })
   }, [])
+
+  const updateStatus = async (id: string, status: string) => {
+    setUpdating(id)
+    const res = await fetch('/api/admin/orders', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status }),
+    })
+    if (res.ok) {
+      const updated = await res.json()
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, status: updated.status } : o))
+    }
+    setUpdating(null)
+  }
 
   return (
     <div className="space-y-6">
@@ -37,11 +63,18 @@ export default function AdminOrdersPage() {
                   <td className="px-4 py-3 text-muted-foreground">{o.customer_email}</td>
                   <td className="px-4 py-3 text-foreground">₦{o.amount?.toLocaleString()}</td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-sm text-xs font-semibold ${
-                      o.status === 'paid' ? 'bg-green-900/40 text-green-400' : 'bg-yellow-900/40 text-yellow-400'
-                    }`}>
-                      {o.status ?? 'pending'}
-                    </span>
+                    <select
+                      value={o.status ?? 'pending'}
+                      disabled={updating === o.id}
+                      onChange={e => updateStatus(o.id, e.target.value)}
+                      className={`px-2 py-0.5 rounded-sm text-xs font-semibold border-0 cursor-pointer disabled:opacity-50 ${statusStyles[o.status] ?? statusStyles.pending}`}
+                    >
+                      {STATUSES.map(s => (
+                        <option key={s} value={s} className="bg-background text-foreground">
+                          {s}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {o.created_at ? new Date(o.created_at).toLocaleDateString() : '—'}
