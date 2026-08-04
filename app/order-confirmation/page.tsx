@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { CheckCircle2, Package } from 'lucide-react'
 
-export default function OrderConfirmationPage() {
+function OrderConfirmationContent() {
   const searchParams = useSearchParams()
   const reference = searchParams.get('reference')
 
@@ -135,5 +136,13 @@ export default function OrderConfirmationPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function OrderConfirmationPage() {
+  return (
+    <Suspense>
+      <OrderConfirmationContent />
+    </Suspense>
   )
 }
