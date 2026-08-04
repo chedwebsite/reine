@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import { Package } from 'lucide-react'
+import Navbar from '@/components/navbar'
 
 export default async function OrdersPage() {
   const supabase = await createClient()
@@ -17,18 +18,7 @@ export default async function OrdersPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
-        <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-display font-bold text-foreground tracking-widest">
-            REINE LUXE
-          </Link>
-          <form action="/api/auth/logout" method="POST">
-            <button type="submit" className="text-sm text-muted-foreground hover:text-accent transition">
-              Sign out
-            </button>
-          </form>
-        </nav>
-      </header>
+      <Navbar />
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-3xl font-display font-bold text-foreground mb-8">Order History</h1>
@@ -37,7 +27,7 @@ export default async function OrdersPage() {
           <div className="text-center py-24 space-y-4">
             <Package size={48} className="text-muted-foreground mx-auto" />
             <p className="text-muted-foreground">No orders yet.</p>
-            <Link href="/collections" className="inline-block bg-accent text-primary px-6 py-3 rounded-sm font-display font-semibold hover:bg-accent/90 transition">
+            <Link href="/collections" className="inline-block bg-accent text-[#0a0a0a] px-6 py-3 rounded-sm font-display font-semibold hover:bg-accent/90 transition">
               Start Shopping
             </Link>
           </div>

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
+import Navbar from '@/components/navbar'
 
 interface CartItem {
   id: string
@@ -72,20 +73,7 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <main className="min-h-screen bg-background">
-        {/* Header */}
-        <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
-          <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="text-2xl font-display font-bold text-foreground tracking-widest">
-                REINE LUXE
-              </Link>
-              <Link href="/collections" className="text-sm font-body text-foreground hover:text-accent transition">
-                COLLECTIONS
-              </Link>
-            </div>
-          </nav>
-        </header>
-
+      <Navbar />
         <div className="flex flex-col items-center justify-center py-24 px-4">
           <ShoppingBag size={48} className="text-muted-foreground mb-4" />
           <h1 className="text-3xl font-display font-bold text-foreground mb-4">Your Cart is Empty</h1>
@@ -94,7 +82,7 @@ export default function CartPage() {
           </p>
           <Link
             href="/collections"
-            className="px-8 py-3 bg-accent text-primary rounded-sm font-display font-semibold hover:bg-accent/90 transition"
+            className="px-8 py-3 bg-accent text-[#0a0a0a] rounded-sm font-display font-semibold hover:bg-accent/90 transition"
           >
             Continue Shopping
           </Link>
@@ -105,19 +93,7 @@ export default function CartPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
-        <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-display font-bold text-foreground tracking-widest">
-              REINE LUXE
-            </Link>
-            <Link href="/collections" className="text-sm font-body text-foreground hover:text-accent transition">
-              COLLECTIONS
-            </Link>
-          </div>
-        </nav>
-      </header>
+      <Navbar />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-3xl font-display font-bold text-foreground mb-12">Shopping Cart</h1>
@@ -202,7 +178,7 @@ export default function CartPage() {
 
               <button
                 onClick={() => router.push('/checkout')}
-                className="w-full bg-accent text-primary py-3 rounded-sm font-display font-semibold hover:bg-accent/90 transition mt-6"
+                className="w-full bg-accent text-[#0a0a0a] py-3 rounded-sm font-display font-semibold hover:bg-accent/90 transition mt-6"
               >
                 Proceed to Checkout
               </button>

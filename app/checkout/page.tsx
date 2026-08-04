@@ -2,8 +2,9 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Navbar from '@/components/navbar'
 
 interface CartItem {
   id: string
@@ -173,18 +174,7 @@ function CheckoutContent() {
 
   return (
     <main className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
-        <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-foreground hover:text-accent transition"
-          >
-            <ArrowLeft size={20} />
-            <span className="text-sm font-body">Back</span>
-          </button>
-        </nav>
-      </header>
+      <Navbar />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-3xl font-display font-bold text-foreground mb-12">Checkout</h1>
@@ -310,7 +300,7 @@ function CheckoutContent() {
               <button
                 type="submit"
                 disabled={paymentProcessing}
-                className="w-full bg-accent text-primary py-4 rounded-sm font-display font-semibold hover:bg-accent/90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-accent text-[#0a0a0a] py-4 rounded-sm font-display font-semibold hover:bg-accent/90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {paymentProcessing && <Loader2 size={20} className="animate-spin" />}
                 {paymentProcessing ? 'Processing...' : 'Pay with Paystack'}

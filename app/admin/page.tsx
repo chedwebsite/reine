@@ -33,7 +33,7 @@ export default function AdminDashboard() {
         <h1 className="text-3xl font-display font-bold text-foreground">Dashboard</h1>
         <Link
           href="/admin/products/new"
-          className="flex items-center gap-2 bg-accent text-primary px-4 py-2 rounded-sm text-sm font-display font-semibold hover:bg-accent/90 transition"
+          className="flex items-center gap-2 bg-accent text-[#0a0a0a] px-4 py-2 rounded-sm text-sm font-display font-semibold hover:bg-accent/90 transition"
         >
           <Plus size={16} /> Add Product
         </Link>
@@ -46,7 +46,7 @@ export default function AdminDashboard() {
             href={href}
             className="border border-border rounded-sm p-6 bg-secondary/30 hover:bg-secondary/60 transition space-y-3"
           >
-            <div className="flex items-center justify-between text-muted-foreground">
+            <div className="flex items-center justify-between text-white">
               <span className="text-sm font-body">{label}</span>
               <Icon size={18} />
             </div>

@@ -129,7 +129,7 @@ export default function ProductFormPage() {
           <button
             type="submit"
             disabled={saving}
-            className="bg-accent text-primary px-6 py-2 rounded-sm text-sm font-display font-semibold hover:bg-accent/90 transition disabled:opacity-50"
+            className="bg-accent text-[#0a0a0a] px-6 py-2 rounded-sm text-sm font-display font-semibold hover:bg-accent/90 transition disabled:opacity-50"
           >
             {saving ? 'Saving...' : isNew ? 'Create Product' : 'Save Changes'}
           </button>

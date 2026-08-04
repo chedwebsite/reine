@@ -6,6 +6,7 @@ import { Heart, ShoppingCart, Trash2 } from 'lucide-react'
 import { supabase, type Product } from '@/lib/supabase'
 import { useAuth } from '@/components/auth-provider'
 import { useRouter } from 'next/navigation'
+import Navbar from '@/components/navbar'
 
 export default function FavoritesPage() {
   const { user } = useAuth()
@@ -45,15 +46,7 @@ export default function FavoritesPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
-        <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-display font-bold text-foreground tracking-widest">REINE LUXE</Link>
-          <div className="flex items-center gap-6">
-            <Link href="/collections" className="text-sm font-body text-foreground hover:text-accent transition">COLLECTIONS</Link>
-            <Link href="/cart" className="p-2 text-foreground hover:text-accent transition"><ShoppingCart size={20} /></Link>
-          </div>
-        </nav>
-      </header>
+      <Navbar />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex items-center gap-3 mb-12">
@@ -77,7 +70,7 @@ export default function FavoritesPage() {
           <div className="text-center py-24 space-y-4">
             <Heart size={48} className="text-muted-foreground mx-auto" />
             <p className="text-muted-foreground">No favorites yet.</p>
-            <Link href="/collections" className="inline-block bg-accent text-primary px-8 py-3 rounded-sm font-display font-semibold hover:bg-accent/90 transition">
+            <Link href="/collections" className="inline-block bg-accent text-[#0a0a0a] px-8 py-3 rounded-sm font-display font-semibold hover:bg-accent/90 transition">
               Browse Collections
             </Link>
           </div>
@@ -89,7 +82,7 @@ export default function FavoritesPage() {
                   <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
                   <button
                     onClick={() => removeFavorite(product.id)}
-                    className="absolute top-4 right-4 bg-background/80 backdrop-blur-sm p-2 rounded-sm opacity-0 group-hover:opacity-100 transition text-red-400 hover:text-red-300"
+                    className="absolute top-4 right-4 bg-background/80 backdrop-blur-sm p-2 rounded-sm transition text-red-400 hover:text-red-300"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -101,7 +94,7 @@ export default function FavoritesPage() {
                     <p className="text-lg font-display font-bold text-accent">₦{product.price.toLocaleString()}</p>
                     <button
                       onClick={() => addToCart(product)}
-                      className="p-2 bg-accent text-primary rounded-sm hover:bg-accent/90 transition"
+                      className="p-2 bg-accent text-[#0a0a0a] rounded-sm hover:bg-accent/90 transition"
                     >
                       <ShoppingCart size={18} />
                     </button>

@@ -38,7 +38,7 @@ export default function AdminProductsPage() {
         <h1 className="text-3xl font-display font-bold text-foreground">Products</h1>
         <Link
           href="/admin/products/new"
-          className="flex items-center gap-2 bg-accent text-primary px-4 py-2 rounded-sm text-sm font-display font-semibold hover:bg-accent/90 transition"
+          className="flex items-center gap-2 bg-accent text-[#0a0a0a] px-4 py-2 rounded-sm text-sm font-display font-semibold hover:bg-accent/90 transition"
         >
           <Plus size={16} /> Add Product
         </Link>
@@ -81,13 +81,13 @@ export default function AdminProductsPage() {
                     <div className="flex items-center justify-end gap-2">
                       <Link
                         href={`/admin/products/${p.id}`}
-                        className="p-1.5 text-muted-foreground hover:text-accent transition"
+                        className="p-1.5 text-accent hover:text-accent/70 transition"
                       >
                         <Pencil size={15} />
                       </Link>
                       <button
                         onClick={() => deleteProduct(p.id)}
-                        className="p-1.5 text-muted-foreground hover:text-red-400 transition"
+                        className="p-1.5 text-red-400 hover:text-red-300 transition"
                       >
                         <Trash2 size={15} />
                       </button>

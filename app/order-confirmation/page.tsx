@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { CheckCircle2, Package } from 'lucide-react'
+import Navbar from '@/components/navbar'
 
 function OrderConfirmationContent() {
   const searchParams = useSearchParams()
@@ -11,14 +12,7 @@ function OrderConfirmationContent() {
 
   return (
     <main className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
-        <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-          <Link href="/" className="text-2xl font-display font-bold text-foreground tracking-widest">
-            REINE LUXE
-          </Link>
-        </nav>
-      </header>
+      <Navbar />
 
       <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 py-24">
         <div className="text-center space-y-8">
@@ -102,7 +96,7 @@ function OrderConfirmationContent() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
             <Link
               href="/collections"
-              className="px-8 py-3 bg-accent text-primary rounded-sm font-display font-semibold hover:bg-accent/90 transition"
+              className="px-8 py-3 bg-accent text-[#0a0a0a] rounded-sm font-display font-semibold hover:bg-accent/90 transition"
             >
               Continue Shopping
             </Link>

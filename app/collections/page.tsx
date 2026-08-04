@@ -1,16 +1,29 @@
 'use client'
 
 import Link from 'next/link'
-import { ShoppingCart, Heart, User, LogOut } from 'lucide-react'
-import { useState, useEffect, useCallback } from 'react'
+import { ShoppingCart, Heart } from 'lucide-react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { supabase, type Product } from '@/lib/supabase'
 import { useAuth } from '@/components/auth-provider'
+import Navbar from '@/components/navbar'
 
 export default function CollectionsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <CollectionsContent />
+    </Suspense>
+  )
+}
+
+function CollectionsContent() {
   const { user } = useAuth()
+  const searchParams = useSearchParams()
   const [cart, setCart] = useState<any[]>([])
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
+    searchParams.get('category')
+  )
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -87,55 +100,10 @@ export default function CollectionsPage() {
 
   const categories = ['Haute Couture', 'Accessories', 'Jewelry']
   const filteredProducts = selectedCategory ? products.filter(p => p.category === selectedCategory) : products
-  const cartCount = cart.reduce((sum, i) => sum + i.quantity, 0)
 
   return (
     <main className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
-        <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-display font-bold text-foreground tracking-widest">
-              REINE LUXE
-            </Link>
-            <div className="hidden md:flex items-center gap-8">
-              <Link href="/collections" className="text-sm font-body text-accent font-semibold">COLLECTIONS</Link>
-              <Link href="/about" className="text-sm font-body text-foreground hover:text-accent transition">ABOUT</Link>
-              <Link href="/contact" className="text-sm font-body text-foreground hover:text-accent transition">CONTACT</Link>
-            </div>
-            <div className="flex items-center gap-4">
-              {user ? (
-                <>
-                  <Link href="/favorites" className="p-2 text-foreground hover:text-accent transition relative">
-                    <Heart size={20} />
-                    {favorites.size > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-accent text-primary text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                        {favorites.size}
-                      </span>
-                    )}
-                  </Link>
-                  <Link href="/orders" className="p-2 text-foreground hover:text-accent transition">
-                    <User size={20} />
-                  </Link>
-                  <Link href="/api/auth/logout" className="p-2 text-muted-foreground hover:text-foreground transition">
-                    <LogOut size={18} />
-                  </Link>
-                </>
-              ) : (
-                <Link href="/login" className="text-sm font-body text-foreground hover:text-accent transition">Sign In</Link>
-              )}
-              <Link href="/cart" className="p-2 text-foreground hover:text-accent transition relative">
-                <ShoppingCart size={20} />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-accent text-primary text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
-            </div>
-          </div>
-        </nav>
-      </header>
+      <Navbar />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         <div className="mb-12 text-center">
@@ -190,7 +158,7 @@ export default function CollectionsPage() {
                 <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
                 <button
                   onClick={() => toggleFavorite(product)}
-                  className={`absolute top-4 right-4 bg-background/80 backdrop-blur-sm p-2 rounded-sm transition ${favorites.has(product.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                  className={`absolute top-4 right-4 bg-background/80 backdrop-blur-sm p-2 rounded-sm transition ${favorites.has(product.id) ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
                 >
                   <Heart
                     size={20}
@@ -215,7 +183,7 @@ export default function CollectionsPage() {
                   <p className="text-lg font-display font-bold text-accent">₦{product.price.toLocaleString()}</p>
                   <button
                     onClick={() => addToCart(product)}
-                    className="p-2 bg-accent text-primary rounded-sm hover:bg-accent/90 transition"
+                    className="p-2 bg-accent text-[#0a0a0a] rounded-sm hover:bg-accent/90 transition"
                   >
                     <ShoppingCart size={18} />
                   </button>

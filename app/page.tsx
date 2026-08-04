@@ -1,90 +1,37 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { ChevronRight, ShoppingCart, Heart, LogOut, User } from 'lucide-react'
-import { useAuth } from '@/components/auth-provider'
+import { ChevronRight } from 'lucide-react'
+import Navbar from '@/components/navbar'
 
 export default function HomePage() {
-  const { user } = useAuth()
-  const router = useRouter()
   const featuredCollections = [
     {
       id: 1,
       name: 'Haute Couture',
       description: 'Timeless elegance redefined',
       image: 'https://images.unsplash.com/photo-1595777707802-52ca3d0cedc1?w=600&h=600&fit=crop',
-      href: '/collections/haute-couture',
+      href: '/collections?category=Haute+Couture',
     },
     {
       id: 2,
       name: 'Accessories',
       description: 'Elevate every moment',
       image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=600&fit=crop',
-      href: '/collections/accessories',
+      href: '/collections?category=Accessories',
     },
     {
       id: 3,
       name: 'Jewelry',
       description: 'Precious moments, forever',
       image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=600&fit=crop',
-      href: '/collections/jewelry',
+      href: '/collections?category=Jewelry',
     },
   ]
 
   return (
     <main className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
-        <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-display font-bold text-foreground tracking-widest">
-              REINE LUX
-            </Link>
-            
-            <div className="hidden md:flex items-center gap-8">
-              <Link href="/collections" className="text-sm font-body text-foreground hover:text-accent transition">
-                COLLECTIONS
-              </Link>
-              <Link href="/about" className="text-sm font-body text-foreground hover:text-accent transition">
-                ABOUT
-              </Link>
-              <Link href="/contact" className="text-sm font-body text-foreground hover:text-accent transition">
-                CONTACT
-              </Link>
-            </div>
-
-            <div className="flex items-center gap-4">
-              {user ? (
-                <>
-                  <Link href="/favorites" className="p-2 text-foreground hover:text-accent transition">
-                    <Heart size={20} />
-                  </Link>
-                  <Link href="/orders" className="p-2 text-foreground hover:text-accent transition">
-                    <User size={20} />
-                  </Link>
-                  <Link href="/api/auth/logout" className="p-2 text-muted-foreground hover:text-foreground transition">
-                    <LogOut size={18} />
-                  </Link>
-                </>
-              ) : (
-                <Link href="/login" className="px-4 py-2 bg-accent text-primary rounded-sm text-sm font-display font-semibold hover:bg-accent/90 transition">
-                  Login
-                </Link>
-              )}
-              <button
-                onClick={() => user ? router.push('/cart') : router.push('/login')}
-                className="p-2 text-foreground hover:text-accent transition relative"
-              >
-                <ShoppingCart size={20} />
-                <span className="absolute -top-1 -right-1 bg-accent text-primary text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  0
-                </span>
-              </button>
-            </div>
-          </div>
-        </nav>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative h-screen bg-gradient-to-b from-background to-secondary/20 flex items-center justify-center overflow-hidden">
@@ -99,7 +46,7 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
             <Link
               href="/collections"
-              className="inline-flex items-center justify-center gap-2 bg-accent text-primary px-8 py-4 rounded-sm font-display font-semibold hover:bg-accent/90 transition"
+              className="inline-flex items-center justify-center gap-2 bg-accent text-[#0a0a0a] px-8 py-4 rounded-sm font-display font-semibold hover:bg-accent/90 transition"
             >
               Explore Collections <ChevronRight size={20} />
             </Link>
@@ -172,7 +119,7 @@ export default function HomePage() {
             />
             <button
               type="submit"
-              className="px-8 py-3 bg-accent text-primary rounded-sm font-display font-semibold hover:bg-accent/90 transition"
+              className="px-8 py-3 bg-accent text-[#0a0a0a] rounded-sm font-display font-semibold hover:bg-accent/90 transition"
             >
               Subscribe
             </button>

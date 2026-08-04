@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Mail, Phone, MapPin } from 'lucide-react'
 import { useState } from 'react'
+import Navbar from '@/components/navbar'
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false)
@@ -36,19 +37,7 @@ export default function ContactPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
-        <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-display font-bold text-foreground tracking-widest">
-              REINE LUXE
-            </Link>
-            <Link href="/collections" className="text-sm font-body text-foreground hover:text-accent transition">
-              COLLECTIONS
-            </Link>
-          </div>
-        </nav>
-      </header>
+      <Navbar />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
         {/* Page Header */}

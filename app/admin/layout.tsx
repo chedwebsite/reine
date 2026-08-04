@@ -83,7 +83,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <aside className="w-56 border-r border-border flex flex-col py-8 px-4 gap-2">
         <Link href="/" className="text-xl font-display font-bold tracking-widest text-foreground mb-8 px-2">
-          REINE LUX
+          REINE LUXE
         </Link>
         {navItems.map(({ href, label, icon: Icon }) => (
           <Link
@@ -91,8 +91,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             href={href}
             className={`flex items-center gap-3 px-3 py-2 rounded-sm text-sm font-body transition ${
               pathname === href
-                ? 'bg-accent text-primary'
-                : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                ? 'bg-accent text-white'
+                : 'text-white hover:text-foreground hover:bg-secondary'
             }`}
           >
             <Icon size={16} />
