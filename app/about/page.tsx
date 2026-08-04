@@ -1,149 +1,106 @@
 import Link from 'next/link'
-import { ShoppingCart } from 'lucide-react'
 import Navbar from '@/components/navbar'
+import Footer from '@/components/footer'
+
+const values = [
+  { label: 'Excellence', desc: 'We never compromise on quality. Every item meets our rigorous standards for craftsmanship and design.' },
+  { label: 'Integrity', desc: 'We operate with complete transparency about our products, pricing, and business practices.' },
+  { label: 'Exclusivity', desc: 'Our collections are intentionally limited to preserve their rarity and ensure only the best reach our clients.' },
+]
+
+const commitments = [
+  'Authentic, verified products from trusted makers and artisans',
+  'Expert curation and personal shopping assistance',
+  'Secure, confidential transactions and premium packaging',
+  'Hassle-free returns and customer satisfaction guarantee',
+  'Exclusive access to limited editions and upcoming collections',
+]
 
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
 
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-24">
-        {/* Hero Section */}
-        <div className="text-center mb-16 space-y-6">
-          <p className="text-accent text-sm font-semibold tracking-widest">OUR STORY</p>
-          <h1 className="text-5xl sm:text-6xl font-display font-bold text-foreground">
-            Reine Luxe
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Where tradition meets innovation, and luxury transcends mere possession to become an experience.
-          </p>
-        </div>
+      {/* Hero */}
+      <section className="relative py-32 px-4 text-center overflow-hidden border-b border-[#1c1c1c]">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-32 bg-[#c9a84c06] blur-3xl pointer-events-none" />
+        <p className="label-luxury mb-6 animate-fade-up opacity-0">Our Story</p>
+        <h1
+          className="font-display font-light text-foreground animate-fade-up opacity-0 delay-100 mb-6"
+          style={{ fontSize: 'clamp(3rem, 7vw, 6rem)', letterSpacing: '0.02em' }}
+        >
+          Reine Luxe
+        </h1>
+        <p className="text-[#8a8478] font-body font-light text-lg max-w-2xl mx-auto animate-fade-up opacity-0 delay-200 leading-relaxed">
+          Where tradition meets innovation, and luxury transcends mere possession to become an experience.
+        </p>
+        <div className="w-12 h-px bg-gradient-to-r from-transparent via-[#c9a84c] to-transparent mx-auto mt-8 animate-fade-up opacity-0 delay-300" />
+      </section>
 
-        {/* Content Sections */}
-        <div className="space-y-16 mb-24">
-          {/* About */}
-          <section className="space-y-6">
-            <h2 className="text-3xl font-display font-bold text-foreground">About Reine Luxe</h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              Reine Luxe Co. was founded with a singular vision: to curate and deliver the finest luxury fashion and accessories to discerning individuals who understand that true luxury is not about excess, but about excellence. Every piece in our collection has been handpicked by our team of experts, with meticulous attention to craftsmanship, quality, and timeless design.
-            </p>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              We believe luxury is a privilege earned through dedication to perfection. Our carefully curated collections represent the pinnacle of contemporary and classic design, sourced from the world's most prestigious makers and artisans.
-            </p>
-          </section>
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-24 space-y-24">
 
-          {/* Values */}
-          <section className="space-y-6">
-            <h2 className="text-3xl font-display font-bold text-foreground">Our Values</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="space-y-3">
-                <h3 className="text-xl font-display font-semibold text-accent">Excellence</h3>
-                <p className="text-muted-foreground">
-                  We never compromise on quality. Every item meets our rigorous standards for craftsmanship and design.
-                </p>
-              </div>
-              <div className="space-y-3">
-                <h3 className="text-xl font-display font-semibold text-accent">Integrity</h3>
-                <p className="text-muted-foreground">
-                  We operate with complete transparency about our products, pricing, and business practices with our valued customers.
-                </p>
-              </div>
-              <div className="space-y-3">
-                <h3 className="text-xl font-display font-semibold text-accent">Exclusivity</h3>
-                <p className="text-muted-foreground">
-                  Our collections are intentionally limited to preserve their exclusivity and ensure only the best reach our clients.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Commitment */}
-          <section className="space-y-6 bg-secondary/30 border border-border rounded-sm p-8">
-            <h2 className="text-3xl font-display font-bold text-foreground">Our Commitment</h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              At Reine Luxe, we&apos;re committed to providing an exceptional shopping experience that goes beyond simply selling products. We believe in building lasting relationships with our clients, understanding their preferences, and delivering personalized service that reflects our commitment to excellence.
+        {/* About text */}
+        <section className="animate-fade-up opacity-0">
+          <p className="label-luxury mb-6">About</p>
+          <div className="space-y-5 text-[#8a8478] font-body font-light text-base leading-[1.9]">
+            <p>
+              Reine Luxe Co. was founded with a singular vision: to curate and deliver the finest luxury fashion and accessories to discerning individuals who understand that true luxury is not about excess, but about excellence.
             </p>
-            <ul className="space-y-3 text-muted-foreground">
-              <li className="flex items-start gap-3">
-                <span className="text-accent font-bold">•</span>
-                <span>Authentic, verified products from trusted makers and artisans</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-accent font-bold">•</span>
-                <span>Expert curation and personal shopping assistance</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-accent font-bold">•</span>
-                <span>Secure, confidential transactions and premium packaging</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-accent font-bold">•</span>
-                <span>Hassle-free returns and customer satisfaction guarantee</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-accent font-bold">•</span>
-                <span>Exclusive access to limited editions and upcoming collections</span>
-              </li>
+            <p>
+              Every piece in our collection has been handpicked by our team of experts, with meticulous attention to craftsmanship, quality, and timeless design. We believe luxury is a privilege earned through dedication to perfection.
+            </p>
+          </div>
+        </section>
+
+        {/* Values */}
+        <section className="animate-fade-up opacity-0">
+          <p className="label-luxury mb-10">Our Values</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#1c1c1c]">
+            {values.map(({ label, desc }, i) => (
+              <div key={label} className={`bg-background p-10 animate-fade-up opacity-0 delay-${(i + 1) * 100}`}>
+                <div className="w-6 h-px bg-[#c9a84c] mb-6" />
+                <h3 className="font-display font-light text-xl text-foreground mb-3 tracking-wide">{label}</h3>
+                <p className="text-sm font-body font-light text-[#8a8478] leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Commitment */}
+        <section className="animate-fade-up opacity-0">
+          <div className="border border-[#1c1c1c] bg-[#0d0d0d] p-10 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-[#c9a84c04] blur-3xl pointer-events-none" />
+            <p className="label-luxury mb-6">Our Commitment</p>
+            <p className="text-[#8a8478] font-body font-light leading-[1.9] mb-8">
+              At Reine Luxe, we're committed to providing an exceptional shopping experience that goes beyond simply selling products — building lasting relationships with clients who share our passion for excellence.
+            </p>
+            <ul className="space-y-4">
+              {commitments.map(item => (
+                <li key={item} className="flex items-start gap-4 text-sm font-body font-light text-[#8a8478]">
+                  <span className="mt-1.5 w-1 h-1 rounded-full bg-accent shrink-0" />
+                  {item}
+                </li>
+              ))}
             </ul>
-          </section>
-        </div>
+          </div>
+        </section>
 
         {/* CTA */}
-        <div className="text-center space-y-6 border-t border-border pt-16">
-          <h2 className="text-3xl font-display font-bold text-foreground">Experience the Difference</h2>
-          <p className="text-lg text-muted-foreground">
+        <section className="text-center pt-8 border-t border-[#1c1c1c] animate-fade-up opacity-0">
+          <h2 className="font-display font-light text-3xl text-foreground mb-4 tracking-wide">Experience the Difference</h2>
+          <p className="text-[#8a8478] font-body font-light mb-10">
             Discover our curated collections and find pieces that resonate with your unique style.
           </p>
           <Link
             href="/collections"
-            className="inline-flex items-center gap-2 bg-accent text-primary px-8 py-4 rounded-sm font-display font-semibold hover:bg-accent/90 transition"
+            className="inline-flex items-center gap-3 bg-accent text-[#080808] px-10 py-4 font-body font-medium text-sm tracking-[0.15em] uppercase hover:bg-[#e8c96a] transition-all duration-300 btn-press"
           >
-            <ShoppingCart size={20} />
             Explore Collections
           </Link>
-        </div>
+        </section>
       </div>
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-background py-16 px-4 sm:px-6 lg:px-8 mt-24">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-            <div>
-              <h3 className="font-display font-semibold text-foreground mb-4">Shop</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/collections" className="hover:text-accent transition">Collections</Link></li>
-                <li><Link href="/products" className="hover:text-accent transition">All Products</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-display font-semibold text-foreground mb-4">Company</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/about" className="hover:text-accent transition">About Us</Link></li>
-                <li><Link href="/contact" className="hover:text-accent transition">Contact</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-display font-semibold text-foreground mb-4">Support</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/faq" className="hover:text-accent transition">FAQ</Link></li>
-                <li><Link href="/returns" className="hover:text-accent transition">Returns</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-display font-semibold text-foreground mb-4">Legal</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/privacy" className="hover:text-accent transition">Privacy</Link></li>
-                <li><Link href="/terms" className="hover:text-accent transition">Terms</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-border pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-muted-foreground">
-              &copy; 2024 Reine Luxe Co. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </main>
   )
 }

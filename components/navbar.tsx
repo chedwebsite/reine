@@ -14,35 +14,31 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [scrolled, setScrolled] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
 
-  // Read cart count from localStorage and keep it in sync
   useEffect(() => {
     function readCart() {
       try {
         const saved = localStorage.getItem('cart')
         const items = saved ? JSON.parse(saved) : []
         setCartCount(items.reduce((sum: number, i: any) => sum + (i.quantity ?? 1), 0))
-      } catch {
-        setCartCount(0)
-      }
+      } catch { setCartCount(0) }
     }
     readCart()
     window.addEventListener('storage', readCart)
-    // Poll every second to catch in-page cart updates
     const interval = setInterval(readCart, 1000)
-    return () => {
-      window.removeEventListener('storage', readCart)
-      clearInterval(interval)
-    }
+    return () => { window.removeEventListener('storage', readCart); clearInterval(interval) }
   }, [])
 
-  // Close mobile menu on route change
-  useEffect(() => { setMobileOpen(false); setSearchOpen(false) }, [pathname])
-
   useEffect(() => {
-    if (searchOpen) searchRef.current?.focus()
-  }, [searchOpen])
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => { setMobileOpen(false); setSearchOpen(false) }, [pathname])
+  useEffect(() => { if (searchOpen) searchRef.current?.focus() }, [searchOpen])
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -54,155 +50,186 @@ export default function Navbar() {
   }
 
   const navLinks = [
-    { href: '/collections', label: 'COLLECTIONS' },
-    { href: '/about', label: 'ABOUT' },
-    { href: '/contact', label: 'CONTACT' },
+    { href: '/collections', label: 'Collections' },
+    { href: '/sale', label: 'Sale' },
+    { href: '/about', label: 'About' },
+    { href: '/contact', label: 'Contact' },
   ]
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
+    <header
+      className={`sticky top-0 z-50 transition-all duration-500 ${
+        scrolled
+          ? 'glass border-b border-[#c9a84c22] shadow-[0_4px_30px_#00000060]'
+          : 'bg-background/90 backdrop-blur-sm border-b border-border'
+      }`}
+    >
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
+
           {/* Brand */}
-          <Link href="/" className="text-2xl font-display font-bold text-foreground tracking-widest">
-            REINE LUXE
+          <Link href="/" className="shrink-0 flex flex-col leading-none group">
+            <span className="text-[1.6rem] font-display font-light tracking-[0.25em] text-gold-shimmer uppercase">
+              Reine Luxe
+            </span>
+            <span className="text-[0.5rem] tracking-[0.35em] text-[#8a8478] uppercase font-body font-light mt-0.5 group-hover:text-[#c9a84c] transition-colors duration-500">
+              Co.
+            </span>
           </Link>
 
-          {/* Desktop nav links */}
+          {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8">
-            {navLinks.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`text-sm font-body transition ${
-                  pathname === href ? 'text-accent font-semibold' : 'text-foreground hover:text-accent'
-                }`}
-              >
-                {label}
-              </Link>
-            ))}
+            {navLinks.map(({ href, label }) => {
+              const active = pathname === href || pathname.startsWith(href + '/')
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`underline-gold text-sm font-body font-light tracking-widest uppercase transition-colors duration-300 ${
+                    active ? 'text-accent active' : 'text-[#8a8478] hover:text-foreground'
+                  }`}
+                >
+                  {label}
+                </Link>
+              )
+            })}
           </div>
 
           {/* Right icons */}
-          <div className="flex items-center gap-2">
-            {/* Search */}
+          <div className="flex items-center gap-1">
+
+            {/* Search — expands inline */}
             {searchOpen ? (
-              <form onSubmit={handleSearch} className="flex items-center gap-2">
+              <form onSubmit={handleSearch} className="flex items-center gap-1 animate-fade-in">
                 <input
                   ref={searchRef}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Search products…"
-                  className="w-48 sm:w-64 px-3 py-1.5 bg-secondary border border-border rounded-sm text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                  placeholder="Search…"
+                  className="w-40 sm:w-56 px-3 py-1.5 bg-[#141414] border border-[#c9a84c44] rounded-sm text-sm text-foreground placeholder-[#8a8478] focus:outline-none focus:border-accent transition-colors"
                 />
-                <button type="submit" className="p-2 text-foreground hover:text-accent transition" aria-label="Submit search">
-                  <Search size={18} />
+                <button type="submit" className="p-2 text-[#8a8478] hover:text-accent transition-colors" aria-label="Search">
+                  <Search size={17} />
                 </button>
-                <button type="button" onClick={() => setSearchOpen(false)} className="p-2 text-muted-foreground hover:text-foreground transition" aria-label="Close search">
-                  <X size={18} />
+                <button type="button" onClick={() => setSearchOpen(false)} className="p-2 text-[#8a8478] hover:text-foreground transition-colors" aria-label="Close">
+                  <X size={17} />
                 </button>
               </form>
             ) : (
-              <button onClick={() => setSearchOpen(true)} className="p-2 text-foreground hover:text-accent transition" aria-label="Search">
-                <Search size={20} />
+              <button onClick={() => setSearchOpen(true)} className="p-2 text-[#8a8478] hover:text-accent transition-colors duration-300" aria-label="Search">
+                <Search size={19} />
               </button>
             )}
+
             {user ? (
               <>
-                <Link href="/favorites" className="p-2 text-foreground hover:text-accent transition" title="Favorites">
-                  <Heart size={20} />
+                <Link href="/favorites" className="p-2 text-[#8a8478] hover:text-accent transition-colors duration-300" title="Favorites">
+                  <Heart size={19} />
                 </Link>
-                <Link href="/orders" className="p-2 text-foreground hover:text-accent transition" title="My Orders">
-                  <User size={20} />
+                <Link href="/orders" className="p-2 text-[#8a8478] hover:text-accent transition-colors duration-300" title="My Orders">
+                  <User size={19} />
                 </Link>
-                <Link href="/api/auth/logout" className="p-2 text-muted-foreground hover:text-foreground transition" title="Sign out">
-                  <LogOut size={18} />
+                <Link href="/api/auth/logout" className="p-2 text-[#8a8478] hover:text-foreground transition-colors duration-300" title="Sign out">
+                  <LogOut size={17} />
                 </Link>
               </>
             ) : (
               <Link
                 href="/login"
-                className="hidden md:inline-flex px-4 py-2 bg-accent text-[#0a0a0a] rounded-sm text-sm font-display font-semibold hover:bg-accent/90 transition"
+                className="hidden md:inline-flex px-5 py-2 border border-[#c9a84c55] text-accent text-xs font-body font-medium tracking-[0.15em] uppercase rounded-sm hover:bg-accent hover:text-[#080808] transition-all duration-300 btn-press"
               >
                 Login
               </Link>
             )}
 
             {/* Cart */}
-            <Link href="/cart" className="p-2 text-foreground hover:text-accent transition relative" title="Cart">
-              <ShoppingCart size={20} />
+            <Link href="/cart" className="relative p-2 text-[#8a8478] hover:text-accent transition-colors duration-300" title="Cart">
+              <ShoppingCart size={19} />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-accent text-[#0a0a0a] text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                <span className="absolute -top-0.5 -right-0.5 bg-accent text-[#080808] text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-body font-semibold leading-none animate-scale-in">
                   {cartCount}
                 </span>
               )}
             </Link>
 
-            {/* Mobile menu toggle */}
+            {/* Mobile toggle */}
             <button
               onClick={() => setMobileOpen(v => !v)}
-              className="md:hidden p-2 text-foreground hover:text-accent transition"
+              className="md:hidden p-2 text-[#8a8478] hover:text-accent transition-colors duration-300"
               aria-label="Toggle menu"
             >
-              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+              {mobileOpen ? <X size={21} /> : <Menu size={21} />}
             </button>
           </div>
         </div>
       </nav>
 
       {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-sm">
-          <div className="mx-auto max-w-7xl px-4 py-4 flex flex-col gap-1">
-            {/* Mobile search */}
-            <form onSubmit={handleSearch} className="flex items-center gap-2 mb-2">
+      <div
+        className={`md:hidden overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          mobileOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <div className="glass border-t border-[#c9a84c22] px-4 py-5 flex flex-col gap-1">
+          {/* Mobile search */}
+          <form onSubmit={handleSearch} className="flex gap-2 mb-3">
+            <div className="relative flex-1">
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8478]" />
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search products…"
-                className="flex-1 px-3 py-2 bg-secondary border border-border rounded-sm text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                className="w-full pl-9 pr-3 py-2.5 bg-[#141414] border border-[#222] rounded-sm text-sm text-foreground placeholder-[#8a8478] focus:outline-none focus:border-[#c9a84c44]"
               />
-              <button type="submit" className="p-2 bg-accent text-[#0a0a0a] rounded-sm">
-                <Search size={16} />
-              </button>
-            </form>
-            {navLinks.map(({ href, label }) => (
+            </div>
+            <button type="submit" className="px-4 py-2 bg-accent text-[#080808] rounded-sm text-xs font-body font-medium tracking-wider uppercase">
+              Go
+            </button>
+          </form>
+
+          <div className="divider-gold mb-3" />
+
+          {navLinks.map(({ href, label }) => {
+            const active = pathname === href
+            return (
               <Link
                 key={href}
                 href={href}
-                className={`px-3 py-3 rounded-sm text-sm font-body transition ${
-                  pathname === href
-                    ? 'bg-accent/10 text-accent font-semibold'
-                    : 'text-foreground hover:bg-secondary hover:text-accent'
+                className={`px-3 py-3 text-sm font-body font-light tracking-widest uppercase transition-all duration-200 rounded-sm ${
+                  active
+                    ? 'text-accent bg-[#c9a84c0a]'
+                    : 'text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c]'
                 }`}
               >
                 {label}
               </Link>
-            ))}
-            {!user && (
-              <Link
-                href="/login"
-                className="mt-2 px-3 py-3 bg-accent text-[#0a0a0a] rounded-sm text-sm font-display font-semibold text-center hover:bg-accent/90 transition"
-              >
-                Login
+            )
+          })}
+
+          {!user && (
+            <Link
+              href="/login"
+              className="mt-3 px-3 py-3 border border-[#c9a84c55] text-accent rounded-sm text-sm font-body font-medium tracking-[0.15em] uppercase text-center hover:bg-accent hover:text-[#080808] transition-all duration-300"
+            >
+              Login
+            </Link>
+          )}
+
+          {user && (
+            <div className="mt-3 pt-3 border-t border-[#1c1c1c] flex flex-col gap-1">
+              <Link href="/favorites" className="px-3 py-3 rounded-sm text-sm font-body text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c] transition-all flex items-center gap-3">
+                <Heart size={15} /> Favorites
               </Link>
-            )}
-            {user && (
-              <div className="mt-2 pt-2 border-t border-border flex flex-col gap-1">
-                <Link href="/favorites" className="px-3 py-3 rounded-sm text-sm font-body text-foreground hover:bg-secondary hover:text-accent transition flex items-center gap-3">
-                  <Heart size={16} /> Favorites
-                </Link>
-                <Link href="/orders" className="px-3 py-3 rounded-sm text-sm font-body text-foreground hover:bg-secondary hover:text-accent transition flex items-center gap-3">
-                  <User size={16} /> My Orders
-                </Link>
-                <Link href="/api/auth/logout" className="px-3 py-3 rounded-sm text-sm font-body text-muted-foreground hover:bg-secondary hover:text-foreground transition flex items-center gap-3">
-                  <LogOut size={16} /> Sign Out
-                </Link>
-              </div>
-            )}
-          </div>
+              <Link href="/orders" className="px-3 py-3 rounded-sm text-sm font-body text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c] transition-all flex items-center gap-3">
+                <User size={15} /> My Orders
+              </Link>
+              <Link href="/api/auth/logout" className="px-3 py-3 rounded-sm text-sm font-body text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c] transition-all flex items-center gap-3">
+                <LogOut size={15} /> Sign Out
+              </Link>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </header>
   )
 }

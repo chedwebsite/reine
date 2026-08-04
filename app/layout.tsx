@@ -1,19 +1,20 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Playfair_Display, Lora } from 'next/font/google'
+import { Cormorant_Garamond, Jost } from 'next/font/google'
 import { AuthProvider } from '@/components/auth-provider'
 import './globals.css'
 
-const playfairDisplay = Playfair_Display({
+const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
   variable: '--font-display',
-  weight: ['400', '500', '600', '700', '800', '900'],
+  weight: ['300', '400', '500', '600', '700'],
+  style: ['normal', 'italic'],
 })
 
-const lora = Lora({
+const jost = Jost({
   subsets: ['latin'],
   variable: '--font-body',
-  weight: ['400', '500', '600', '700'],
+  weight: ['300', '400', '500', '600'],
 })
 
 export const metadata: Metadata = {
@@ -52,7 +53,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${playfairDisplay.variable} ${lora.variable} bg-background`}>
+    <html lang="en" className={`${cormorant.variable} ${jost.variable} bg-background`}>
       <body className="antialiased font-body text-foreground">
         <AuthProvider>
           {children}

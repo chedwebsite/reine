@@ -27,7 +27,7 @@ const faqs = [
   },
   {
     q: 'How do I track my order?',
-    a: 'Once your order ships, you'll receive a tracking number via email. You can also view your order status in the My Orders section of your account.',
+    a: "Once your order ships, you'll receive a tracking number via email. You can also view your order status in the My Orders section of your account.",
   },
   {
     q: 'Do you ship internationally?',
