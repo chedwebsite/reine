@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { ShoppingCart, Heart } from 'lucide-react'
-import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useState, useEffect, useCallback, Suspense, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase, type Product } from '@/lib/supabase'
 import { useAuth } from '@/components/auth-provider'
 import Navbar from '@/components/navbar'
+import Footer from '@/components/footer'
 
 export default function CollectionsPage() {
   return (
@@ -26,6 +27,14 @@ function CollectionsContent() {
   )
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const showToast = (msg: string) => {
+    setToast(msg)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 2500)
+  }
 
   // Load products
   useEffect(() => {
@@ -82,6 +91,7 @@ function CollectionsContent() {
       ? cart.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i)
       : [...cart, { ...product, quantity: 1 }]
     saveCart(updated)
+    showToast('Added to cart')
   }
 
   const toggleFavorite = async (product: Product) => {
@@ -91,9 +101,11 @@ function CollectionsContent() {
     if (isFav) {
       next.delete(product.id)
       await fetch('/api/favorites', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: product.id }) })
+      showToast('Removed from favorites')
     } else {
       next.add(product.id)
       await fetch('/api/favorites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: product.id }) })
+      showToast('Added to favorites')
     }
     setFavorites(next)
   }
@@ -104,6 +116,12 @@ function CollectionsContent() {
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-accent text-[#0a0a0a] px-6 py-3 rounded-sm font-body font-semibold text-sm shadow-lg">
+          {toast}
+        </div>
+      )}
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         <div className="mb-12 text-center">
@@ -154,10 +172,15 @@ function CollectionsContent() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {!loading && filteredProducts.map(product => (
             <div key={product.id} className="group border border-border rounded-sm overflow-hidden hover:border-accent transition">
-              <div className="relative h-72 overflow-hidden bg-secondary">
+              <Link href={`/products/${product.id}`} className="block relative h-72 overflow-hidden bg-secondary">
                 <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                {product.in_stock === false && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <span className="text-white text-xs font-semibold tracking-widest border border-white/50 px-3 py-1">OUT OF STOCK</span>
+                  </div>
+                )}
                 <button
-                  onClick={() => toggleFavorite(product)}
+                  onClick={e => { e.preventDefault(); toggleFavorite(product) }}
                   className={`absolute top-4 right-4 bg-background/80 backdrop-blur-sm p-2 rounded-sm transition ${favorites.has(product.id) ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
                 >
                   <Heart
@@ -165,7 +188,7 @@ function CollectionsContent() {
                     className={favorites.has(product.id) ? 'text-accent fill-accent' : 'text-accent'}
                   />
                 </button>
-              </div>
+              </Link>
               <div className="p-4 space-y-3">
                 <p className="text-xs text-muted-foreground font-semibold tracking-widest">{product.category}</p>
                 <h3 className="text-lg font-display font-semibold text-foreground">{product.name}</h3>
@@ -183,7 +206,9 @@ function CollectionsContent() {
                   <p className="text-lg font-display font-bold text-accent">₦{product.price.toLocaleString()}</p>
                   <button
                     onClick={() => addToCart(product)}
-                    className="p-2 bg-accent text-[#0a0a0a] rounded-sm hover:bg-accent/90 transition"
+                    disabled={product.in_stock === false}
+                    className="p-2 bg-accent text-[#0a0a0a] rounded-sm hover:bg-accent/90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    title={product.in_stock === false ? 'Out of stock' : 'Add to cart'}
                   >
                     <ShoppingCart size={18} />
                   </button>
@@ -194,44 +219,7 @@ function CollectionsContent() {
         </div>
       </div>
 
-      <footer className="border-t border-border bg-background py-16 px-4 sm:px-6 lg:px-8 mt-24">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-            <div>
-              <h3 className="font-display font-semibold text-foreground mb-4">Shop</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/collections" className="hover:text-accent transition">Collections</Link></li>
-                <li><Link href="/favorites" className="hover:text-accent transition">Favorites</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-display font-semibold text-foreground mb-4">Company</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/about" className="hover:text-accent transition">About Us</Link></li>
-                <li><Link href="/contact" className="hover:text-accent transition">Contact</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-display font-semibold text-foreground mb-4">Support</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/faq" className="hover:text-accent transition">FAQ</Link></li>
-                <li><Link href="/shipping" className="hover:text-accent transition">Shipping</Link></li>
-                <li><Link href="/returns" className="hover:text-accent transition">Returns</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-display font-semibold text-foreground mb-4">Account</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/login" className="hover:text-accent transition">Sign In</Link></li>
-                <li><Link href="/orders" className="hover:text-accent transition">My Orders</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-border pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-muted-foreground">&copy; 2024 Reine Luxe Co. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </main>
   )
 }

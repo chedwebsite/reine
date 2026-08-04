@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { Heart, ShoppingCart, Trash2 } from 'lucide-react'
 import { supabase, type Product } from '@/lib/supabase'
@@ -13,6 +13,14 @@ export default function FavoritesPage() {
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function showToast(msg: string) {
+    setToast(msg)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 2500)
+  }
 
   useEffect(() => {
     if (user === null) { router.push('/login'); return }
@@ -31,6 +39,7 @@ export default function FavoritesPage() {
   async function removeFavorite(id: string) {
     await fetch('/api/favorites', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: id }) })
     setProducts(p => p.filter(x => x.id !== id))
+    showToast('Removed from favorites')
   }
 
   function addToCart(product: Product) {
@@ -42,11 +51,18 @@ export default function FavoritesPage() {
       : [...cart, { ...product, quantity: 1 }]
     localStorage.setItem('cart', JSON.stringify(updated))
     if (user) fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: updated }) })
+    showToast('Added to cart')
   }
 
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-accent text-[#0a0a0a] px-6 py-3 rounded-sm font-body font-semibold text-sm shadow-lg">
+          {toast}
+        </div>
+      )}
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex items-center gap-3 mb-12">
