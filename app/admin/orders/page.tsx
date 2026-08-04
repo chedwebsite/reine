@@ -77,7 +77,12 @@ export default function AdminOrdersPage() {
                     </select>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {o.created_at ? new Date(o.created_at).toLocaleDateString() : '—'}
+                    {o.created_at ? (
+                      <span className="flex flex-col">
+                        <span>{new Date(o.created_at).toLocaleDateString()}</span>
+                        <span className="text-xs opacity-70">{new Date(o.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </span>
+                    ) : '—'}
                   </td>
                 </tr>
               ))}
