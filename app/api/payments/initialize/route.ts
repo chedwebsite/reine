@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { initializePayment } from '@/lib/paystack'
+import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, amount, orderId, customerName } = body
+    const { email, amount, orderId, customerName, items } = body
 
     if (!email || !amount || !orderId || !customerName) {
       return NextResponse.json(
@@ -19,6 +20,18 @@ export async function POST(request: NextRequest) {
       orderId,
       customerName,
     })
+
+    const reference = result.data?.reference
+    if (reference) {
+      await supabase.from('orders').insert({
+        customer_email: email,
+        customer_name: customerName,
+        amount,
+        paystack_reference: reference,
+        status: 'pending',
+        items: items ?? [],
+      })
+    }
 
     return NextResponse.json(result)
   } catch (error) {

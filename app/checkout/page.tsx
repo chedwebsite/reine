@@ -124,6 +124,7 @@ function CheckoutContent() {
           amount: total,
           orderId: `order_${Date.now()}`,
           customerName: formData.fullName,
+          items,
         }),
       })
 
