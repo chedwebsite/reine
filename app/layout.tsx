@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Playfair_Display, Lora } from 'next/font/google'
+import { AuthProvider } from '@/components/auth-provider'
 import './globals.css'
 
 const playfairDisplay = Playfair_Display({
@@ -53,7 +54,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${playfairDisplay.variable} ${lora.variable} bg-background`}>
       <body className="antialiased font-body text-foreground">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
