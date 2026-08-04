@@ -1,7 +1,13 @@
+'use client'
+
 import Link from 'next/link'
-import { ChevronRight, ShoppingCart, Heart } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { ChevronRight, ShoppingCart, Heart, LogOut, User } from 'lucide-react'
+import { useAuth } from '@/components/auth-provider'
 
 export default function HomePage() {
+  const { user } = useAuth()
+  const router = useRouter()
   const featuredCollections = [
     {
       id: 1,
@@ -49,15 +55,32 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center gap-4">
-              <button className="p-2 text-foreground hover:text-accent transition">
-                <Heart size={20} />
-              </button>
-              <Link href="/cart" className="p-2 text-foreground hover:text-accent transition relative">
+              {user ? (
+                <>
+                  <Link href="/favorites" className="p-2 text-foreground hover:text-accent transition">
+                    <Heart size={20} />
+                  </Link>
+                  <Link href="/orders" className="p-2 text-foreground hover:text-accent transition">
+                    <User size={20} />
+                  </Link>
+                  <Link href="/api/auth/logout" className="p-2 text-muted-foreground hover:text-foreground transition">
+                    <LogOut size={18} />
+                  </Link>
+                </>
+              ) : (
+                <Link href="/login" className="px-4 py-2 bg-accent text-primary rounded-sm text-sm font-display font-semibold hover:bg-accent/90 transition">
+                  Login
+                </Link>
+              )}
+              <button
+                onClick={() => user ? router.push('/cart') : router.push('/login')}
+                className="p-2 text-foreground hover:text-accent transition relative"
+              >
                 <ShoppingCart size={20} />
                 <span className="absolute -top-1 -right-1 bg-accent text-primary text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   0
                 </span>
-              </Link>
+              </button>
             </div>
           </div>
         </nav>

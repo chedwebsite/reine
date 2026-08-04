@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/components/auth-provider'
 
 interface CartItem {
   id: string
@@ -17,37 +18,43 @@ export default function CartPage() {
   const [items, setItems] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const { user } = useAuth()
 
   useEffect(() => {
-    // Load from localStorage in client
-    const saved = localStorage.getItem('cart')
-    if (saved) {
-      try {
-        setItems(JSON.parse(saved))
-      } catch (error) {
-        console.error('Failed to load cart:', error)
+    async function loadCart() {
+      if (user) {
+        const res = await fetch('/api/cart')
+        const data = res.ok ? await res.json() : []
+        if (data.length > 0) {
+          setItems(data)
+          localStorage.setItem('cart', JSON.stringify(data))
+          setLoading(false)
+          return
+        }
       }
+      const saved = localStorage.getItem('cart')
+      if (saved) {
+        try { setItems(JSON.parse(saved)) } catch {}
+      }
+      setLoading(false)
     }
-    setLoading(false)
-  }, [])
+    loadCart()
+  }, [user])
+
+  const saveCart = (updated: CartItem[]) => {
+    setItems(updated)
+    localStorage.setItem('cart', JSON.stringify(updated))
+    if (user) {
+      fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: updated }) })
+    }
+  }
 
   const updateQuantity = (id: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeItem(id)
-      return
-    }
-    const updated = items.map(item =>
-      item.id === id ? { ...item, quantity } : item
-    )
-    setItems(updated)
-    localStorage.setItem('cart', JSON.stringify(updated))
+    if (quantity <= 0) { saveCart(items.filter(i => i.id !== id)); return }
+    saveCart(items.map(i => i.id === id ? { ...i, quantity } : i))
   }
 
-  const removeItem = (id: string) => {
-    const updated = items.filter(item => item.id !== id)
-    setItems(updated)
-    localStorage.setItem('cart', JSON.stringify(updated))
-  }
+  const removeItem = (id: string) => saveCart(items.filter(i => i.id !== id))
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const shipping = items.length > 0 ? 50 : 0

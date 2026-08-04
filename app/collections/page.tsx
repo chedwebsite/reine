@@ -1,51 +1,93 @@
 'use client'
 
 import Link from 'next/link'
-import { ShoppingCart, Heart } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { ShoppingCart, Heart, User, LogOut } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase, type Product } from '@/lib/supabase'
+import { useAuth } from '@/components/auth-provider'
 
 export default function CollectionsPage() {
+  const { user } = useAuth()
   const [cart, setCart] = useState<any[]>([])
+  const [favorites, setFavorites] = useState<Set<string>>(new Set())
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
+  // Load products
   useEffect(() => {
-    async function fetchProducts() {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('category')
-      if (error) console.error('Supabase error:', error)
-      if (data) setProducts(data)
-      setLoading(false)
-    }
-    fetchProducts()
+    supabase.from('products').select('*').order('category')
+      .then(({ data }) => { if (data) setProducts(data); setLoading(false) })
   }, [])
 
-  const categories = ['Haute Couture', 'Accessories', 'Jewelry']
-  const filteredProducts = selectedCategory
-    ? products.filter(p => p.category === selectedCategory)
-    : products
-
-  const addToCart = (product: any) => {
-    const existingItem = cart.find(item => item.id === product.id)
-    let updatedCart
-
-    if (existingItem) {
-      updatedCart = cart.map(item =>
-        item.id === product.id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      )
-    } else {
-      updatedCart = [...cart, { ...product, quantity: 1 }]
+  // Load cart: from Supabase if logged in, else localStorage
+  useEffect(() => {
+    async function loadCart() {
+      if (user) {
+        const res = await fetch('/api/cart')
+        const data = res.ok ? await res.json() : []
+        if (data.length > 0) {
+          setCart(data)
+          localStorage.setItem('cart', JSON.stringify(data))
+        } else {
+          // Migrate localStorage cart to Supabase on first login
+          const local = localStorage.getItem('cart')
+          if (local) {
+            const parsed = JSON.parse(local)
+            setCart(parsed)
+            await fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: parsed }) })
+          }
+        }
+      } else {
+        const saved = localStorage.getItem('cart')
+        if (saved) setCart(JSON.parse(saved))
+      }
     }
+    loadCart()
+  }, [user])
 
-    setCart(updatedCart)
-    localStorage.setItem('cart', JSON.stringify(updatedCart))
+  // Load favorites
+  useEffect(() => {
+    if (!user) return
+    fetch('/api/favorites')
+      .then(r => r.json())
+      .then((ids: string[]) => setFavorites(new Set(ids)))
+  }, [user])
+
+  const saveCart = useCallback(async (updated: any[]) => {
+    setCart(updated)
+    localStorage.setItem('cart', JSON.stringify(updated))
+    if (user) {
+      await fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: updated }) })
+    }
+  }, [user])
+
+  const addToCart = (product: Product) => {
+    if (!user) { window.location.href = '/login'; return }
+    const existing = cart.find(i => i.id === product.id)
+    const updated = existing
+      ? cart.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i)
+      : [...cart, { ...product, quantity: 1 }]
+    saveCart(updated)
   }
+
+  const toggleFavorite = async (product: Product) => {
+    if (!user) { window.location.href = '/login'; return }
+    const isFav = favorites.has(product.id)
+    const next = new Set(favorites)
+    if (isFav) {
+      next.delete(product.id)
+      await fetch('/api/favorites', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: product.id }) })
+    } else {
+      next.add(product.id)
+      await fetch('/api/favorites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: product.id }) })
+    }
+    setFavorites(next)
+  }
+
+  const categories = ['Haute Couture', 'Accessories', 'Jewelry']
+  const filteredProducts = selectedCategory ? products.filter(p => p.category === selectedCategory) : products
+  const cartCount = cart.reduce((sum, i) => sum + i.quantity, 0)
 
   return (
     <main className="min-h-screen bg-background">
@@ -56,28 +98,37 @@ export default function CollectionsPage() {
             <Link href="/" className="text-2xl font-display font-bold text-foreground tracking-widest">
               REINE LUXE
             </Link>
-            
             <div className="hidden md:flex items-center gap-8">
-              <Link href="/collections" className="text-sm font-body text-accent font-semibold">
-                COLLECTIONS
-              </Link>
-              <Link href="/about" className="text-sm font-body text-foreground hover:text-accent transition">
-                ABOUT
-              </Link>
-              <Link href="/contact" className="text-sm font-body text-foreground hover:text-accent transition">
-                CONTACT
-              </Link>
+              <Link href="/collections" className="text-sm font-body text-accent font-semibold">COLLECTIONS</Link>
+              <Link href="/about" className="text-sm font-body text-foreground hover:text-accent transition">ABOUT</Link>
+              <Link href="/contact" className="text-sm font-body text-foreground hover:text-accent transition">CONTACT</Link>
             </div>
-
             <div className="flex items-center gap-4">
-              <button className="p-2 text-foreground hover:text-accent transition">
-                <Heart size={20} />
-              </button>
+              {user ? (
+                <>
+                  <Link href="/favorites" className="p-2 text-foreground hover:text-accent transition relative">
+                    <Heart size={20} />
+                    {favorites.size > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-accent text-primary text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {favorites.size}
+                      </span>
+                    )}
+                  </Link>
+                  <Link href="/orders" className="p-2 text-foreground hover:text-accent transition">
+                    <User size={20} />
+                  </Link>
+                  <Link href="/api/auth/logout" className="p-2 text-muted-foreground hover:text-foreground transition">
+                    <LogOut size={18} />
+                  </Link>
+                </>
+              ) : (
+                <Link href="/login" className="text-sm font-body text-foreground hover:text-accent transition">Sign In</Link>
+              )}
               <Link href="/cart" className="p-2 text-foreground hover:text-accent transition relative">
                 <ShoppingCart size={20} />
-                {cart.length > 0 && (
+                {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-accent text-primary text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {cart.length}
+                    {cartCount}
                   </span>
                 )}
               </Link>
@@ -87,12 +138,9 @@ export default function CollectionsPage() {
       </header>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-        {/* Page Header */}
         <div className="mb-12 text-center">
           <p className="text-accent text-sm font-semibold tracking-widest mb-4">SHOP</p>
-          <h1 className="text-5xl font-display font-bold text-foreground mb-4">
-            Our Collections
-          </h1>
+          <h1 className="text-5xl font-display font-bold text-foreground mb-4">Our Collections</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Curated selections of timeless luxury pieces, each crafted with meticulous attention to detail.
           </p>
@@ -102,25 +150,17 @@ export default function CollectionsPage() {
         <div className="flex flex-wrap gap-4 justify-center mb-12">
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`px-6 py-2 rounded-sm font-body text-sm font-semibold transition ${
-              selectedCategory === null
-                ? 'bg-accent text-primary'
-                : 'border border-border text-foreground hover:border-accent'
-            }`}
+            className={`px-6 py-2 rounded-sm font-body text-sm font-semibold transition ${selectedCategory === null ? 'bg-accent text-primary' : 'border border-border text-foreground hover:border-accent'}`}
           >
             All Products
           </button>
-          {categories.map(category => (
+          {categories.map(cat => (
             <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`px-6 py-2 rounded-sm font-body text-sm font-semibold transition ${
-                selectedCategory === category
-                  ? 'bg-accent text-primary'
-                  : 'border border-border text-foreground hover:border-accent'
-              }`}
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-6 py-2 rounded-sm font-body text-sm font-semibold transition ${selectedCategory === cat ? 'bg-accent text-primary' : 'border border-border text-foreground hover:border-accent'}`}
             >
-              {category}
+              {cat}
             </button>
           ))}
         </div>
@@ -145,63 +185,34 @@ export default function CollectionsPage() {
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {!loading && filteredProducts.map(product => (
-            <div
-              key={product.id}
-              className="group border border-border rounded-sm overflow-hidden hover:border-accent transition"
-            >
-              {/* Image */}
+            <div key={product.id} className="group border border-border rounded-sm overflow-hidden hover:border-accent transition">
               <div className="relative h-72 overflow-hidden bg-secondary">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
-                />
-                <div className="absolute top-4 right-4 bg-background/80 backdrop-blur-sm p-2 rounded-sm opacity-0 group-hover:opacity-100 transition">
-                  <button
-                    onClick={() => addToCart(product)}
-                    className="text-accent hover:text-accent/80"
-                  >
-                    <Heart size={20} />
-                  </button>
-                </div>
+                <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                <button
+                  onClick={() => toggleFavorite(product)}
+                  className={`absolute top-4 right-4 bg-background/80 backdrop-blur-sm p-2 rounded-sm transition ${favorites.has(product.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                >
+                  <Heart
+                    size={20}
+                    className={favorites.has(product.id) ? 'text-accent fill-accent' : 'text-accent'}
+                  />
+                </button>
               </div>
-
-              {/* Product Info */}
               <div className="p-4 space-y-3">
-                <p className="text-xs text-muted-foreground font-semibold tracking-widest">
-                  {product.category}
-                </p>
-                <h3 className="text-lg font-display font-semibold text-foreground">
-                  {product.name}
-                </h3>
-
-                {/* Rating */}
+                <p className="text-xs text-muted-foreground font-semibold tracking-widest">{product.category}</p>
+                <h3 className="text-lg font-display font-semibold text-foreground">{product.name}</h3>
                 <div className="flex items-center gap-2">
                   <div className="flex gap-1">
                     {[...Array(5)].map((_, i) => (
-                      <svg
-                        key={i}
-                        className={`w-3 h-3 ${
-                          i < Math.floor(product.rating)
-                            ? 'text-accent fill-accent'
-                            : 'text-muted-foreground'
-                        }`}
-                        viewBox="0 0 24 24"
-                      >
+                      <svg key={i} className={`w-3 h-3 ${i < Math.floor(product.rating) ? 'text-accent fill-accent' : 'text-muted-foreground'}`} viewBox="0 0 24 24">
                         <polygon points="12 2 15.09 10.26 24 10.26 17.55 16.16 19.64 24.42 12 18.51 4.36 24.42 6.45 16.16 0 10.26 8.91 10.26" />
                       </svg>
                     ))}
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {product.reviews} reviews
-                  </span>
+                  <span className="text-xs text-muted-foreground">{product.reviews} reviews</span>
                 </div>
-
-                {/* Price and Button */}
                 <div className="flex items-center justify-between pt-2 border-t border-border">
-                  <p className="text-lg font-display font-bold text-accent">
-                    ₦{product.price.toLocaleString()}
-                  </p>
+                  <p className="text-lg font-display font-bold text-accent">₦{product.price.toLocaleString()}</p>
                   <button
                     onClick={() => addToCart(product)}
                     className="p-2 bg-accent text-primary rounded-sm hover:bg-accent/90 transition"
@@ -215,7 +226,6 @@ export default function CollectionsPage() {
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="border-t border-border bg-background py-16 px-4 sm:px-6 lg:px-8 mt-24">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
@@ -223,8 +233,7 @@ export default function CollectionsPage() {
               <h3 className="font-display font-semibold text-foreground mb-4">Shop</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><Link href="/collections" className="hover:text-accent transition">Collections</Link></li>
-                <li><Link href="/products" className="hover:text-accent transition">All Products</Link></li>
-                <li><Link href="/sale" className="hover:text-accent transition">Sale</Link></li>
+                <li><Link href="/favorites" className="hover:text-accent transition">Favorites</Link></li>
               </ul>
             </div>
             <div>
@@ -232,7 +241,6 @@ export default function CollectionsPage() {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><Link href="/about" className="hover:text-accent transition">About Us</Link></li>
                 <li><Link href="/contact" className="hover:text-accent transition">Contact</Link></li>
-                <li><Link href="/careers" className="hover:text-accent transition">Careers</Link></li>
               </ul>
             </div>
             <div>
@@ -244,23 +252,15 @@ export default function CollectionsPage() {
               </ul>
             </div>
             <div>
-              <h3 className="font-display font-semibold text-foreground mb-4">Legal</h3>
+              <h3 className="font-display font-semibold text-foreground mb-4">Account</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/privacy" className="hover:text-accent transition">Privacy</Link></li>
-                <li><Link href="/terms" className="hover:text-accent transition">Terms</Link></li>
-                <li><Link href="/cookies" className="hover:text-accent transition">Cookies</Link></li>
+                <li><Link href="/login" className="hover:text-accent transition">Sign In</Link></li>
+                <li><Link href="/orders" className="hover:text-accent transition">My Orders</Link></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-border pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-muted-foreground">
-              &copy; 2024 Reine Luxe Co. All rights reserved.
-            </p>
-            <div className="flex gap-4 text-muted-foreground">
-              <a href="#" className="hover:text-accent transition">Instagram</a>
-              <a href="#" className="hover:text-accent transition">Twitter</a>
-              <a href="#" className="hover:text-accent transition">LinkedIn</a>
-            </div>
+            <p className="text-sm text-muted-foreground">&copy; 2024 Reine Luxe Co. All rights reserved.</p>
           </div>
         </div>
       </footer>
