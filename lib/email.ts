@@ -1,6 +1,12 @@
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+})
 
 export async function sendOrderConfirmation({
   to,
@@ -13,8 +19,8 @@ export async function sendOrderConfirmation({
   reference: string
   amount: number
 }) {
-  await resend.emails.send({
-    from: 'Reine Luxe <orders@reineluxe.com>',
+  await transporter.sendMail({
+    from: `"Reine Luxe" <${process.env.GMAIL_USER}>`,
     to,
     subject: 'Your Order is Confirmed – Reine Luxe',
     html: `
