@@ -8,6 +8,7 @@ import Navbar from '@/components/navbar'
 export default function ContactPage() {
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -18,16 +19,23 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    setSubmitted(true)
-    setFormData({ name: '', email: '', phone: '', message: '' })
+    setError('')
+
+    const res = await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    })
+
+    if (res.ok) {
+      setSubmitted(true)
+      setFormData({ name: '', email: '', phone: '', message: '' })
+      setTimeout(() => setSubmitted(false), 5000)
+    } else {
+      setError('Something went wrong. Please try again.')
+    }
+
     setLoading(false)
-    
-    // Reset success message after 5 seconds
-    setTimeout(() => setSubmitted(false), 5000)
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -110,6 +118,11 @@ export default function ContactPage() {
                   <p className="text-green-500 font-body font-semibold">
                     Thank you! Your message has been sent successfully. We&apos;ll get back to you soon.
                   </p>
+                </div>
+              )}
+              {error && (
+                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-sm">
+                  <p className="text-red-500 font-body font-semibold">{error}</p>
                 </div>
               )}
 
