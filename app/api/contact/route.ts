@@ -1,5 +1,7 @@
 import nodemailer from 'nodemailer'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { applyRateLimit } from '@/lib/security'
+import { contactSchema } from '@/lib/validation'
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -9,12 +11,21 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-export async function POST(req: Request) {
-  const { name, email, phone, message } = await req.json()
+export async function POST(req: NextRequest) {
+  // Rate limit: 5 contact submissions per minute per IP
+  const rateError = applyRateLimit(req, 5, 60_000)
+  if (rateError) return rateError
 
-  if (!name || !email || !message) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+  const body = await req.json().catch(() => null)
+  const parsed = contactSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? 'Invalid input' },
+      { status: 400 }
+    )
   }
+
+  const { name, email, phone, message } = parsed.data
 
   await transporter.sendMail({
     from: `"Reine Luxe" <${process.env.GMAIL_USER}>`,

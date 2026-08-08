@@ -104,7 +104,7 @@ export default function Navbar() {
           </div>
 
           {/* Right icons */}
-          <div className="flex items-center gap-0.5 sm:gap-1">
+          <div className="hidden lg:flex items-center gap-0.5 sm:gap-1">
 
             {/* Search — expands inline (hidden on very small screens when closed) */}
             {searchOpen ? (
@@ -164,20 +164,21 @@ export default function Navbar() {
             </Link>
 
             {/* Mobile/tablet toggle — visible below lg */}
-            <button
+           
+          </div>
+           <button
               onClick={() => setMobileOpen(v => !v)}
-              className="lg:hidden p-2 text-[#8a8478] hover:text-accent transition-colors duration-300"
+              className="lg:hidden block p-2 text-[#8a8478] hover:text-accent transition-colors duration-300"
               aria-label="Toggle menu"
             >
               {mobileOpen ? <X size={21} /> : <Menu size={21} />}
             </button>
-          </div>
         </div>
       </nav>
 
       {/* Mobile/tablet menu — below lg */}
       <div
-        className={`lg:hidden overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`lg:hidden block overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           mobileOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >

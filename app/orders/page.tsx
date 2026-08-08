@@ -3,32 +3,50 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import { Package } from 'lucide-react'
 import Navbar from '@/components/navbar'
+import OrdersPagination from '@/components/order/orders-pagination'
 
-export default async function OrdersPage() {
+const PAGE_SIZE = 10
+
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>
+}) {
+  const { page = '1' } = await searchParams
+  const currentPage = Math.max(1, parseInt(page) || 1)
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) redirect('/login')
 
   // Query orders by user_id first (more reliable), falling back to email
-  let { data: orders, error } = await supabase
+  const from = (currentPage - 1) * PAGE_SIZE
+  const to = from + PAGE_SIZE - 1
+
+  let { data: orders, error, count } = await supabase
     .from('orders')
-    .select('*')
+    .select('*', { count: 'exact' })
     .or(`user_id.eq.${user.id},and(customer_email.eq.${user.email?.replace(/'/g, "''")})`)
     .order('created_at', { ascending: false })
+    .range(from, to)
 
   // If the user_id column doesn't exist yet, fall back to email-only query
   if (error && error.code === 'PGRST204') {
-    const { data: emailOrders } = await supabase
+    const { data: emailOrders, count: emailCount } = await supabase
       .from('orders')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('customer_email', user.email)
       .order('created_at', { ascending: false })
+      .range(from, to)
     orders = emailOrders
+    count = emailCount
   }
 
   // Sort by created_at (desc) regardless of query path
   orders?.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+  const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1
 
   const statusStyles: Record<string, string> = {
     pending: 'bg-yellow-500/20 text-yellow-500',
@@ -55,40 +73,46 @@ export default async function OrdersPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
-            {orders.map((order) => (
-              <Link
-                key={order.id}
-                href={`/orders/${order.id}`}
-                className="block border border-border rounded-sm p-6 bg-secondary/30 space-y-3 hover:border-accent/50 hover:bg-secondary/50 transition group"
-              >
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground font-mono group-hover:text-accent transition">
-                    #{order.paystack_reference ?? order.id}
-                  </p>
-                  <span className={`text-xs px-2 py-1 rounded-full font-semibold ${statusStyles[order.status ?? 'pending'] ?? 'bg-yellow-500/20 text-yellow-500'}`}>
-                    {(order.status ?? 'pending').toUpperCase()}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <p className="font-display font-semibold text-foreground">
-                    {Array.isArray(order.items) && order.items.length > 0
-                      ? `${order.items.length} item${order.items.length > 1 ? 's' : ''}`
-                      : order.customer_name}
-                  </p>
-                  <p className="font-display font-bold text-accent">₦{Number(order.amount).toLocaleString()}</p>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <p className="text-muted-foreground">
-                    {new Date(order.created_at).toLocaleDateString('en-NG', { dateStyle: 'long' })}
-                  </p>
-                  <span className="text-accent font-medium opacity-0 group-hover:opacity-100 transition">
-                    View Details →
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <>
+            <div className="space-y-4">
+              {orders.map((order) => (
+                <Link
+                  key={order.id}
+                  href={`/orders/${order.id}`}
+                  className="block border border-border rounded-sm p-6 bg-secondary/30 space-y-3 hover:border-accent/50 hover:bg-secondary/50 transition group"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground font-mono group-hover:text-accent transition">
+                      #{order.paystack_reference ?? order.id}
+                    </p>
+                    <span className={`text-xs px-2 py-1 rounded-full font-semibold ${statusStyles[order.status ?? 'pending'] ?? 'bg-yellow-500/20 text-yellow-500'}`}>
+                      {(order.status ?? 'pending').toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="font-display font-semibold text-foreground">
+                      {Array.isArray(order.items) && order.items.length > 0
+                        ? `${order.items.length} item${order.items.length > 1 ? 's' : ''}`
+                        : order.customer_name}
+                    </p>
+                    <p className="font-display font-bold text-accent">₦{Number(order.amount).toLocaleString()}</p>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <p className="text-muted-foreground">
+                      {new Date(order.created_at).toLocaleDateString('en-NG', { dateStyle: 'long' })}
+                    </p>
+                    <span className="text-accent font-medium opacity-0 group-hover:opacity-100 transition">
+                      View Details →
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <OrdersPagination currentPage={currentPage} totalPages={totalPages} />
+            )}
+          </>
         )}
       </div>
     </main>

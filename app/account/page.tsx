@@ -1,11 +1,27 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
-import { User, Package, Heart, Settings, ChevronRight } from 'lucide-react'
+import { Package, Heart, Settings, ChevronRight } from 'lucide-react'
 import Navbar from '@/components/navbar'
 import ProfileForm from '@/components/account/profile-form'
+import PasswordResetForm from '@/components/account/password-reset-form'
 
-export default async function AccountPage() {
+export const metadata: Metadata = {
+  title: 'My Account | Reine Luxe Co.',
+  description: 'Manage your Reine Luxe Co. account profile, view your orders, and track your favorites.',
+  openGraph: {
+    title: 'My Account | Reine Luxe Co.',
+    description: 'Manage your Reine Luxe Co. account profile, view your orders, and track your favorites.',
+  },
+}
+
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ recovery?: string }>
+}) {
+  const { recovery } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -48,6 +64,19 @@ export default async function AccountPage() {
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-3xl font-display font-bold text-foreground mb-8">My Account</h1>
+
+        {/* Password Recovery Banner */}
+        {recovery === 'true' && (
+          <div className="border border-accent/40 bg-accent/10 rounded-sm p-6 mb-8">
+            <h2 className="text-lg font-display font-semibold text-foreground mb-2">
+              Set a New Password
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Enter a new password for your account below.
+            </p>
+            <PasswordResetForm />
+          </div>
+        )}
 
         {/* Profile Header */}
         <div className="border border-border rounded-sm p-8 bg-secondary/30 mb-8 flex flex-col sm:flex-row items-center sm:items-start gap-6">

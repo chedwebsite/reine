@@ -2,15 +2,25 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyPayment } from '@/lib/paystack'
 import { supabase } from '@/lib/supabase'
 import { sendOrderConfirmation } from '@/lib/email'
+import { applyRateLimit } from '@/lib/security'
+import { paymentVerifySchema } from '@/lib/validation'
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { reference } = body
+    // Rate limit: 20 verifications per minute per IP
+    const rateError = applyRateLimit(request, 20, 60_000)
+    if (rateError) return rateError
 
-    if (!reference) {
-      return NextResponse.json({ error: 'Reference is required' }, { status: 400 })
+    const body = await request.json().catch(() => null)
+    const parsed = paymentVerifySchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? 'Invalid input' },
+        { status: 400 }
+      )
     }
+
+    const { reference } = parsed.data
 
     const result = await verifyPayment({ reference })
     const txn = result.data

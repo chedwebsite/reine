@@ -1,18 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { initializePayment } from '@/lib/paystack'
 import { supabase } from '@/lib/supabase'
+import { applyRateLimit } from '@/lib/security'
+import { paymentInitializeSchema } from '@/lib/validation'
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { email, amount, orderId, customerName, items, userId } = body
+    // Rate limit: 10 payment initializations per minute per IP
+    const rateError = applyRateLimit(request, 10, 60_000)
+    if (rateError) return rateError
 
-    if (!email || !amount || !orderId || !customerName) {
+    const body = await request.json().catch(() => null)
+    const parsed = paymentInitializeSchema.safeParse(body)
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: parsed.error.issues[0]?.message ?? 'Invalid input' },
         { status: 400 }
       )
     }
+
+    const { email, amount, orderId, customerName, items, userId, shippingAddress } = parsed.data
 
     const result = await initializePayment({
       email,
@@ -32,6 +39,8 @@ export async function POST(request: NextRequest) {
         items: items ?? [],
         // Store the authenticated user's ID so orders can be tracked reliably
         user_id: userId ?? null,
+        // Store shipping address on the order
+        shipping_address: shippingAddress ?? null,
       })
     }
 

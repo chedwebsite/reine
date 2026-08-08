@@ -52,9 +52,29 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://reineluxe.com'
+
+  const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Reine Luxe Co.',
+    url: siteUrl,
+    logo: `${siteUrl}/icon.svg`,
+    description: 'Luxury Fashion & Accessories - Exclusive Collections',
+    contactPoint: {
+      '@type': 'ContactPoint',
+      email: 'support@reineluxe.com',
+      contactType: 'customer service',
+    },
+  }
+
   return (
     <html lang="en" className={`${cormorant.variable} ${jost.variable} bg-background`}>
       <body className="antialiased font-body text-foreground">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
         <AuthProvider>
           {children}
         </AuthProvider>

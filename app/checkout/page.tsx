@@ -140,6 +140,13 @@ function CheckoutContent() {
           customerName: formData.fullName,
           items,
           userId: user?.id ?? null,
+          shippingAddress: {
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            zip: formData.zip,
+            phone: formData.phone,
+          },
         }),
       })
 

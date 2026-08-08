@@ -1,6 +1,16 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import Navbar from '@/components/navbar'
 import Footer from '@/components/footer'
+
+export const metadata: Metadata = {
+  title: 'About Us | Reine Luxe Co.',
+  description: 'Discover the story behind Reine Luxe Co. — where tradition meets innovation, and luxury transcends mere possession to become an experience.',
+  openGraph: {
+    title: 'About Us | Reine Luxe Co.',
+    description: 'Discover the story behind Reine Luxe Co. — where tradition meets innovation, and luxury transcends mere possession to become an experience.',
+  },
+}
 
 const values = [
   { label: 'Excellence', desc: 'We never compromise on quality. Every item meets our rigorous standards for craftsmanship and design.' },

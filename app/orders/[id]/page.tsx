@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
-import { Package, Truck, CheckCircle2, Clock, XCircle, ChevronLeft } from 'lucide-react'
+import { Package, Truck, CheckCircle2, Clock, XCircle, ChevronLeft, MapPin } from 'lucide-react'
 import Navbar from '@/components/navbar'
+import CancelOrderButton from '@/components/order/cancel-order-button'
 
 interface OrderItem {
   id: string
@@ -65,13 +66,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               #{order.paystack_reference ?? order.id}
             </p>
           </div>
-          <span className={`text-xs px-3 py-1.5 rounded-full font-semibold ${
-            isCancelled
+          <span className={`text-xs px-3 py-1.5 rounded-full font-semibold ${isCancelled
               ? 'bg-red-500/20 text-red-500'
               : status === 'delivered'
                 ? 'bg-emerald-500/20 text-emerald-500'
                 : 'bg-green-500/20 text-green-500'
-          }`}>
+            }`}>
             {status.toUpperCase()}
           </span>
         </div>
@@ -88,23 +88,20 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 return (
                   <div key={step} className="flex items-center flex-1 last:flex-none">
                     <div className="flex flex-col items-center gap-2">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition ${
-                        isReached
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition ${isReached
                           ? 'border-accent bg-accent/10 text-accent'
                           : 'border-border text-muted-foreground/40'
-                      } ${isCurrent ? 'ring-4 ring-accent/20' : ''}`}>
+                        } ${isCurrent ? 'ring-4 ring-accent/20' : ''}`}>
                         {meta.icon}
                       </div>
-                      <span className={`text-[10px] font-medium uppercase tracking-wider text-center ${
-                        isReached ? 'text-accent' : 'text-muted-foreground/50'
-                      }`}>
+                      <span className={`text-[10px] font-medium uppercase tracking-wider text-center ${isReached ? 'text-accent' : 'text-muted-foreground/50'
+                        }`}>
                         {meta.label}
                       </span>
                     </div>
                     {index < STATUS_FLOW.length - 1 && (
-                      <div className={`flex-1 h-0.5 mx-2 mb-6 transition ${
-                        index < currentStep ? 'bg-accent' : 'bg-border'
-                      }`} />
+                      <div className={`flex-1 h-0.5 mx-2 mb-6 transition ${index < currentStep ? 'bg-accent' : 'bg-border'
+                        }`} />
                     )}
                   </div>
                 )
@@ -117,6 +114,23 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <div>
               <p className="font-display font-semibold text-foreground">Order Cancelled</p>
               <p className="text-sm text-muted-foreground">This order has been cancelled. Contact support if you have questions.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Shipping Address */}
+        {order.shipping_address && (
+          <div className="border border-border rounded-sm p-6 bg-secondary/30 mb-8">
+            <h2 className="text-lg font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+              <MapPin size={18} className="text-accent" /> Shipping Address
+            </h2>
+            <div className="space-y-1 text-sm text-muted-foreground">
+              <p className="text-foreground font-medium">{order.customer_name}</p>
+              <p>{order.shipping_address.address}</p>
+              {order.shipping_address.city && <p>{order.shipping_address.city}</p>}
+              {order.shipping_address.state && <p>{order.shipping_address.state}</p>}
+              {order.shipping_address.zip && <p>{order.shipping_address.zip}</p>}
+              {order.shipping_address.phone && <p className="pt-2">Phone: {order.shipping_address.phone}</p>}
             </div>
           </div>
         )}
@@ -177,6 +191,16 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             </span>
           </div>
         </div>
+
+        {/* Cancel Order - only for pending orders */}
+        {status === 'pending' && !isCancelled && (
+          <div className="mt-8 text-center">
+            <CancelOrderButton orderId={order.id} />
+            <p className="text-xs text-muted-foreground mt-2">
+              You can only cancel pending orders.
+            </p>
+          </div>
+        )}
 
         <div className="mt-8 text-center">
           <Link href="/contact" className="text-accent hover:text-accent/80 text-sm font-medium">

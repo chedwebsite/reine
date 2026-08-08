@@ -10,7 +10,7 @@ const collections = [
     id: 1,
     name: 'Haute Couture',
     description: 'Timeless elegance redefined',
-    image: 'https://images.unsplash.com/photo-1595777707802-52ca3d0cedc1?w=800&h=1000&fit=crop',
+    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&h=1000&fit=crop',
     href: '/collections?category=Haute+Couture',
   },
   {

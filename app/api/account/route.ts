@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { accountUpdateSchema } from '@/lib/validation'
 
 export async function GET() {
   const supabase = await createClient()
@@ -28,8 +29,16 @@ export async function PATCH(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await request.json()
-  const { fullName, phone, address, city, state, zip } = body
+  const body = await request.json().catch(() => null)
+  const parsed = accountUpdateSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? 'Invalid input' },
+      { status: 400 }
+    )
+  }
+
+  const { fullName, phone, address, city, state, zip } = parsed.data
 
   // Update auth user metadata (full name)
   if (fullName) {
