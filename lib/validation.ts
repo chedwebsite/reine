@@ -90,3 +90,11 @@ export const passwordResetSchema = z.object({
 export const resendVerificationSchema = z.object({
   email: z.string().email('Invalid email address'),
 })
+
+// ─── Public order tracking ───────────────────────────────────────
+export const orderTrackSchema = z.object({
+  reference: z.string().min(3, 'Order reference is required').max(100),
+  email: z.string().email('Invalid email address'),
+})
+
+

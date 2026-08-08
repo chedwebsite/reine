@@ -27,8 +27,13 @@ const faqs = [
   },
   {
     q: 'How do I track my order?',
-    a: "Once your order ships, you'll receive a tracking number via email. You can also view your order status in the My Orders section of your account.",
+    a: 'No account needed. Visit Track Order and enter your Paystack payment reference plus the email used at checkout. Logged-in customers can also view full history under My Orders. Once your order ships, a courier tracking number is emailed to you.',
   },
+  {
+    q: 'Do I need an account to checkout?',
+    a: 'No. You can checkout as a guest. Use your email and payment reference anytime on the Track Order page. Creating an account is optional and lets you save favorites and view all past orders in one place.',
+  },
+
   {
     q: 'Do you ship internationally?',
     a: 'Currently we ship within Nigeria only. International shipping is coming soon — sign up for our newsletter to be notified.',

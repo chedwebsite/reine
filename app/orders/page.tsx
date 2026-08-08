@@ -18,7 +18,8 @@ export default async function OrdersPage({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) redirect('/login')
+  if (!user) redirect('/track-order')
+
 
   // Query orders by user_id first (more reliable), falling back to email
   const from = (currentPage - 1) * PAGE_SIZE

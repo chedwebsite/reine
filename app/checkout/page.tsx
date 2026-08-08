@@ -210,12 +210,33 @@ function CheckoutContent() {
                 </div>
               )}
 
+              {/* Guest checkout notice */}
+              {!user && (
+                <div className="p-4 border border-accent/30 bg-accent/5 rounded-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-body text-foreground font-medium">
+                      Checking out as a guest
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      No account needed. You can track your order with your email and payment reference.
+                    </p>
+                  </div>
+                  <Link
+                    href="/login"
+                    className="shrink-0 text-xs font-body font-semibold tracking-wider uppercase text-accent hover:text-accent/80 border border-accent/40 px-4 py-2 rounded-sm hover:bg-accent/10 transition"
+                  >
+                    Sign in instead
+                  </Link>
+                </div>
+              )}
+
               {/* Contact Info */}
               <div className="border border-border rounded-sm p-6 bg-secondary/30">
                 <h2 className="text-lg font-display font-semibold text-foreground mb-4">
                   Contact Information
                 </h2>
                 <div className="space-y-4">
+
                   <div>
                     <label className="block text-sm font-body text-foreground mb-2">
                       Email Address *
@@ -372,6 +393,12 @@ function CheckoutContent() {
               <p className="text-xs text-muted-foreground text-center mt-4">
                 Payments securely processed by Paystack
               </p>
+              <p className="text-xs text-muted-foreground text-center">
+                Already ordered?{' '}
+                <Link href="/track-order" className="text-accent hover:text-accent/80">
+                  Track your order
+                </Link>
+              </p>
             </div>
           </div>
         </div>
@@ -379,6 +406,7 @@ function CheckoutContent() {
     </main>
   )
 }
+
 
 export default function CheckoutPage() {
   return (

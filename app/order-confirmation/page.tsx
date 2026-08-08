@@ -94,9 +94,17 @@ function OrderConfirmationContent() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
+            {reference && (
+              <Link
+                href={`/track-order?reference=${encodeURIComponent(reference)}`}
+                className="px-8 py-3 bg-accent text-[#0a0a0a] rounded-sm font-display font-semibold hover:bg-accent/90 transition"
+              >
+                Track Your Order
+              </Link>
+            )}
             <Link
               href="/collections"
-              className="px-8 py-3 bg-accent text-[#0a0a0a] rounded-sm font-display font-semibold hover:bg-accent/90 transition"
+              className="px-8 py-3 border border-border text-foreground rounded-sm font-display font-semibold hover:bg-secondary/50 transition"
             >
               Continue Shopping
             </Link>
@@ -107,6 +115,15 @@ function OrderConfirmationContent() {
               Return to Home
             </Link>
           </div>
+
+          <p className="text-sm text-muted-foreground">
+            Save your reference above — you can track anytime at{' '}
+            <Link href="/track-order" className="text-accent hover:text-accent/80">
+              Track Order
+            </Link>
+            {' '}with the email used at checkout. No account required.
+          </p>
+
 
           {/* Support */}
           <div className="pt-12 border-t border-border">

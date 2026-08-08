@@ -87,8 +87,9 @@
 8. **Stock notifications** — "Notify me when back in stock" for out-of-stock items.
 
 ### User Experience
-9. **Guest checkout** — Allow checkout without creating an account (currently requires login for order tracking).
-10. **Order tracking by reference** — Public order lookup page using just the Paystack reference + email.
+9. ~~**Guest checkout**~~ — ✅ Done. Checkout works without login; cart/checkout UX labels guest flow; optional sign-in prompt.
+10. ~~**Order tracking by reference**~~ — ✅ Done. `/track-order` + `POST /api/orders/track` (reference + email), linked from nav, footer, confirmation, emails, FAQ.
+
 11. **Saved payment methods** — Store Paystack customer references for one-click checkout.
 12. **Multi-address book** — Save multiple shipping addresses.
 13. **Order reorder** — "Buy again" button on past orders.

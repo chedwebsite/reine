@@ -14,7 +14,8 @@ export default function AdminDashboard() {
         fetch('/api/admin/orders'),
       ])
       const products = pRes.ok ? await pRes.json() : []
-      const orders = oRes.ok ? await oRes.json() : []
+      const ordersRes = oRes.ok ? await oRes.json() : {}
+      const orders: any[] = Array.isArray(ordersRes) ? ordersRes : (ordersRes.data ?? [])
       const revenue = orders.reduce((sum: number, o: any) => sum + (o.amount ?? 0), 0)
       setStats({ products: products.length, orders: orders.length, revenue })
     }

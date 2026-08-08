@@ -180,8 +180,18 @@ export default function CartPage() {
                 onClick={() => router.push('/checkout')}
                 className="w-full bg-accent text-[#0a0a0a] py-3 rounded-sm font-display font-semibold hover:bg-accent/90 transition mt-6"
               >
-                Proceed to Checkout
+                {user ? 'Proceed to Checkout' : 'Checkout as Guest'}
               </button>
+
+              {!user && (
+                <p className="text-xs text-muted-foreground text-center">
+                  No account needed.{' '}
+                  <Link href="/login" className="text-accent hover:text-accent/80">
+                    Sign in
+                  </Link>{' '}
+                  to save your order history.
+                </p>
+              )}
 
               <Link
                 href="/collections"
@@ -189,6 +199,7 @@ export default function CartPage() {
               >
                 Continue Shopping
               </Link>
+
             </div>
           </div>
         </div>

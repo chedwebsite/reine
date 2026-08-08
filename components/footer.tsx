@@ -20,11 +20,13 @@ const cols = [
   {
     heading: 'Support',
     links: [
+      { href: '/track-order', label: 'Track Order' },
       { href: '/faq', label: 'FAQ' },
       { href: '/shipping', label: 'Shipping' },
       { href: '/returns', label: 'Returns' },
     ],
   },
+
   {
     heading: 'Legal',
     links: [
