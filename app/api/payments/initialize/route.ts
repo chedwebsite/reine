@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { initializePayment } from '@/lib/paystack'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-server'
 import { applyRateLimit } from '@/lib/security'
 import { paymentInitializeSchema } from '@/lib/validation'
 
@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
 
     const reference = result.data?.reference
     if (reference) {
+      const supabase = await createClient()
       await supabase.from('orders').insert({
         customer_email: email,
         customer_name: customerName,

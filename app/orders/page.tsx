@@ -28,7 +28,7 @@ export default async function OrdersPage({
   let { data: orders, error, count } = await supabase
     .from('orders')
     .select('*', { count: 'exact' })
-    .or(`user_id.eq.${user.id},and(customer_email.eq.${user.email?.replace(/'/g, "''")})`)
+    .or(`user_id.eq.${user.id},customer_email.eq.${user.email?.replace(/'/g, "''")}`)    
     .order('created_at', { ascending: false })
     .range(from, to)
 

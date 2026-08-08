@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyPayment } from '@/lib/paystack'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-server'
 import { sendOrderConfirmation } from '@/lib/email'
 import { applyRateLimit } from '@/lib/security'
 import { paymentVerifySchema } from '@/lib/validation'
@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     const txn = result.data
 
     if (txn?.status === 'success') {
+      const supabase = await createClient()
       const { data: order } = await supabase
         .from('orders')
         .update({ status: 'paid' })
