@@ -164,7 +164,7 @@ export default function Navbar() {
             )}
 
 
-            {/* Cart */}
+              {/* Cart */}
             <Link href="/cart" className="relative p-2 text-[#8a8478] hover:text-accent transition-colors duration-300" title="Cart">
               <ShoppingCart size={19} />
               {cartCount > 0 && (
@@ -173,17 +173,26 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
-
-            {/* Mobile/tablet toggle — visible below lg */}
-           
           </div>
-           <button
+
+          {/* Mobile/tablet right — cart + hamburger */}
+          <div className="lg:hidden flex items-center gap-1">
+            <Link href="/cart" className="relative p-2 text-[#8a8478] hover:text-accent transition-colors duration-300" title="Cart">
+              <ShoppingCart size={20} />
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-accent text-[#080808] text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-body font-semibold leading-none animate-scale-in">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+            <button
               onClick={() => setMobileOpen(v => !v)}
-              className="lg:hidden block p-2 text-[#8a8478] hover:text-accent transition-colors duration-300"
+              className="p-2 text-[#8a8478] hover:text-accent transition-colors duration-300"
               aria-label="Toggle menu"
             >
               {mobileOpen ? <X size={21} /> : <Menu size={21} />}
             </button>
+          </div>
         </div>
       </nav>
 
@@ -232,6 +241,17 @@ export default function Navbar() {
           {!user && (
             <div className="mt-3 flex flex-col gap-2">
               <Link
+                href="/cart"
+                className="px-3 py-3 rounded-sm text-sm font-body text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c] transition-all flex items-center justify-between gap-3"
+              >
+                <span className="flex items-center gap-3"><ShoppingCart size={15} /> Cart</span>
+                {cartCount > 0 && (
+                  <span className="bg-accent text-[#080808] text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-body font-semibold leading-none">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+              <Link
                 href="/track-order"
                 className="px-3 py-3 rounded-sm text-sm font-body text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c] transition-all flex items-center gap-3"
               >
@@ -249,6 +269,14 @@ export default function Navbar() {
 
           {user && (
             <div className="mt-3 pt-3 border-t border-[#1c1c1c] flex flex-col gap-1">
+              <Link href="/cart" className="px-3 py-3 rounded-sm text-sm font-body text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c] transition-all flex items-center justify-between gap-3">
+                <span className="flex items-center gap-3"><ShoppingCart size={15} /> Cart</span>
+                {cartCount > 0 && (
+                  <span className="bg-accent text-[#080808] text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-body font-semibold leading-none">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
               <Link href="/account" className="px-3 py-3 rounded-sm text-sm font-body text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c] transition-all flex items-center gap-3">
                 <LayoutDashboard size={15} /> My Account
               </Link>
