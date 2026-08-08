@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Navbar from '@/components/navbar'
+import { useAuth } from '@/components/auth-provider'
 
 interface CartItem {
   id: string
@@ -22,6 +23,7 @@ function CheckoutContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const reference = searchParams.get('reference')
+  const { user } = useAuth()
 
   const [items, setItems] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -39,6 +41,17 @@ function CheckoutContent() {
     state: '',
     zip: '',
   })
+
+  useEffect(() => {
+    // Prefill email/name from the authenticated user (if logged in)
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        email: prev.email || user.email || '',
+        fullName: prev.fullName || user.user_metadata?.full_name || user.user_metadata?.name || '',
+      }))
+    }
+  }, [user])
 
   useEffect(() => {
     // Load cart from localStorage
@@ -126,6 +139,7 @@ function CheckoutContent() {
           orderId: `order_${Date.now()}`,
           customerName: formData.fullName,
           items,
+          userId: user?.id ?? null,
         }),
       })
 

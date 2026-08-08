@@ -3,13 +3,15 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
-import { ShoppingCart, Heart, User, LogOut, Menu, X, Search } from 'lucide-react'
+import { ShoppingCart, Heart, User, LogOut, Menu, X, Search, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/components/auth-provider'
+import { createClient } from '@/lib/supabase-browser'
 
 export default function Navbar() {
   const { user } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
+  const supabase = createClient()
   const [cartCount, setCartCount] = useState(0)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -49,6 +51,12 @@ export default function Navbar() {
     setSearchQuery('')
   }
 
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
+
   const navLinks = [
     { href: '/collections', label: 'Collections' },
     { href: '/sale', label: 'Sale' },
@@ -64,21 +72,21 @@ export default function Navbar() {
           : 'bg-background/90 backdrop-blur-sm border-b border-border'
       }`}
     >
-      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center justify-between gap-4">
+      <nav className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
 
           {/* Brand */}
           <Link href="/" className="shrink-0 flex flex-col leading-none group">
-            <span className="text-[1.6rem] font-display font-light tracking-[0.25em] text-gold-shimmer uppercase">
+            <span className="text-[1.2rem] sm:text-[1.4rem] lg:text-[1.6rem] font-display font-light tracking-[0.2em] sm:tracking-[0.25em] text-gold-shimmer uppercase whitespace-nowrap">
               Reine Luxe
             </span>
-            <span className="text-[0.5rem] tracking-[0.35em] text-[#8a8478] uppercase font-body font-light mt-0.5 group-hover:text-[#c9a84c] transition-colors duration-500">
+            <span className="text-[0.45rem] sm:text-[0.5rem] tracking-[0.3em] sm:tracking-[0.35em] text-[#8a8478] uppercase font-body font-light mt-0.5 group-hover:text-[#c9a84c] transition-colors duration-500">
               Co.
             </span>
           </Link>
 
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-8">
+          {/* Desktop nav — lg and up */}
+          <div className="hidden lg:flex items-center gap-8">
             {navLinks.map(({ href, label }) => {
               const active = pathname === href || pathname.startsWith(href + '/')
               return (
@@ -96,9 +104,9 @@ export default function Navbar() {
           </div>
 
           {/* Right icons */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1">
 
-            {/* Search — expands inline */}
+            {/* Search — expands inline (hidden on very small screens when closed) */}
             {searchOpen ? (
               <form onSubmit={handleSearch} className="flex items-center gap-1 animate-fade-in">
                 <input
@@ -106,7 +114,7 @@ export default function Navbar() {
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Search…"
-                  className="w-40 sm:w-56 px-3 py-1.5 bg-[#141414] border border-[#c9a84c44] rounded-sm text-sm text-foreground placeholder-[#8a8478] focus:outline-none focus:border-accent transition-colors"
+                  className="w-32 sm:w-48 lg:w-56 px-3 py-1.5 bg-[#141414] border border-[#c9a84c44] rounded-sm text-sm text-foreground placeholder-[#8a8478] focus:outline-none focus:border-accent transition-colors"
                 />
                 <button type="submit" className="p-2 text-[#8a8478] hover:text-accent transition-colors" aria-label="Search">
                   <Search size={17} />
@@ -129,14 +137,17 @@ export default function Navbar() {
                 <Link href="/orders" className="p-2 text-[#8a8478] hover:text-accent transition-colors duration-300" title="My Orders">
                   <User size={19} />
                 </Link>
-                <Link href="/api/auth/logout" className="p-2 text-[#8a8478] hover:text-foreground transition-colors duration-300" title="Sign out">
-                  <LogOut size={17} />
+                <Link href="/account" className="hidden sm:inline-flex p-2 text-[#8a8478] hover:text-accent transition-colors duration-300" title="My Account">
+                  <LayoutDashboard size={19} />
                 </Link>
+                <button onClick={handleLogout} className="p-2 text-[#8a8478] hover:text-foreground transition-colors duration-300" title="Sign out">
+                  <LogOut size={17} />
+                </button>
               </>
             ) : (
               <Link
                 href="/login"
-                className="hidden md:inline-flex px-5 py-2 border border-[#c9a84c55] text-accent text-xs font-body font-medium tracking-[0.15em] uppercase rounded-sm hover:bg-accent hover:text-[#080808] transition-all duration-300 btn-press"
+                className="hidden md:inline-flex px-4 sm:px-5 py-2 border border-[#c9a84c55] text-accent text-xs font-body font-medium tracking-[0.15em] uppercase rounded-sm hover:bg-accent hover:text-[#080808] transition-all duration-300 btn-press"
               >
                 Login
               </Link>
@@ -152,10 +163,10 @@ export default function Navbar() {
               )}
             </Link>
 
-            {/* Mobile toggle */}
+            {/* Mobile/tablet toggle — visible below lg */}
             <button
               onClick={() => setMobileOpen(v => !v)}
-              className="md:hidden p-2 text-[#8a8478] hover:text-accent transition-colors duration-300"
+              className="lg:hidden p-2 text-[#8a8478] hover:text-accent transition-colors duration-300"
               aria-label="Toggle menu"
             >
               {mobileOpen ? <X size={21} /> : <Menu size={21} />}
@@ -164,10 +175,10 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile menu */}
+      {/* Mobile/tablet menu — below lg */}
       <div
-        className={`md:hidden overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          mobileOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+        className={`lg:hidden overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          mobileOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
         <div className="glass border-t border-[#c9a84c22] px-4 py-5 flex flex-col gap-1">
@@ -217,15 +228,18 @@ export default function Navbar() {
 
           {user && (
             <div className="mt-3 pt-3 border-t border-[#1c1c1c] flex flex-col gap-1">
+              <Link href="/account" className="px-3 py-3 rounded-sm text-sm font-body text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c] transition-all flex items-center gap-3">
+                <LayoutDashboard size={15} /> My Account
+              </Link>
               <Link href="/favorites" className="px-3 py-3 rounded-sm text-sm font-body text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c] transition-all flex items-center gap-3">
                 <Heart size={15} /> Favorites
               </Link>
               <Link href="/orders" className="px-3 py-3 rounded-sm text-sm font-body text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c] transition-all flex items-center gap-3">
                 <User size={15} /> My Orders
               </Link>
-              <Link href="/api/auth/logout" className="px-3 py-3 rounded-sm text-sm font-body text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c] transition-all flex items-center gap-3">
+              <button onClick={handleLogout} className="px-3 py-3 rounded-sm text-sm font-body text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c] transition-all flex items-center gap-3 w-full text-left">
                 <LogOut size={15} /> Sign Out
-              </Link>
+              </button>
             </div>
           )}
         </div>

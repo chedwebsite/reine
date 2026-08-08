@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, amount, orderId, customerName, items } = body
+    const { email, amount, orderId, customerName, items, userId } = body
 
     if (!email || !amount || !orderId || !customerName) {
       return NextResponse.json(
@@ -30,6 +30,8 @@ export async function POST(request: NextRequest) {
         paystack_reference: reference,
         status: 'pending',
         items: items ?? [],
+        // Store the authenticated user's ID so orders can be tracked reliably
+        user_id: userId ?? null,
       })
     }
 

@@ -10,18 +10,41 @@ export default async function OrdersPage() {
 
   if (!user) redirect('/login')
 
-  const { data: orders } = await supabase
+  // Query orders by user_id first (more reliable), falling back to email
+  let { data: orders, error } = await supabase
     .from('orders')
     .select('*')
-    .eq('customer_email', user.email)
+    .or(`user_id.eq.${user.id},and(customer_email.eq.${user.email?.replace(/'/g, "''")})`)
     .order('created_at', { ascending: false })
+
+  // If the user_id column doesn't exist yet, fall back to email-only query
+  if (error && error.code === 'PGRST204') {
+    const { data: emailOrders } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('customer_email', user.email)
+      .order('created_at', { ascending: false })
+    orders = emailOrders
+  }
+
+  // Sort by created_at (desc) regardless of query path
+  orders?.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+  const statusStyles: Record<string, string> = {
+    pending: 'bg-yellow-500/20 text-yellow-500',
+    paid: 'bg-green-500/20 text-green-500',
+    processing: 'bg-blue-500/20 text-blue-500',
+    shipped: 'bg-purple-500/20 text-purple-500',
+    delivered: 'bg-emerald-500/20 text-emerald-500',
+    cancelled: 'bg-red-500/20 text-red-500',
+  }
 
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16">
-        <h1 className="text-3xl font-display font-bold text-foreground mb-8">Order History</h1>
+        <h1 className="text-3xl font-display font-bold text-foreground mb-8">My Orders</h1>
 
         {!orders?.length ? (
           <div className="text-center py-24 space-y-4">
@@ -34,21 +57,36 @@ export default async function OrdersPage() {
         ) : (
           <div className="space-y-4">
             {orders.map((order) => (
-              <div key={order.id} className="border border-border rounded-sm p-6 bg-secondary/30 space-y-3">
+              <Link
+                key={order.id}
+                href={`/orders/${order.id}`}
+                className="block border border-border rounded-sm p-6 bg-secondary/30 space-y-3 hover:border-accent/50 hover:bg-secondary/50 transition group"
+              >
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground font-mono">{order.paystack_reference}</p>
-                  <span className={`text-xs px-2 py-1 rounded-full font-semibold ${order.status === 'paid' ? 'bg-green-500/20 text-green-500' : 'bg-yellow-500/20 text-yellow-500'}`}>
-                    {order.status ?? 'pending'}
+                  <p className="text-sm text-muted-foreground font-mono group-hover:text-accent transition">
+                    #{order.paystack_reference ?? order.id}
+                  </p>
+                  <span className={`text-xs px-2 py-1 rounded-full font-semibold ${statusStyles[order.status ?? 'pending'] ?? 'bg-yellow-500/20 text-yellow-500'}`}>
+                    {(order.status ?? 'pending').toUpperCase()}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <p className="font-display font-semibold text-foreground">{order.customer_name}</p>
+                  <p className="font-display font-semibold text-foreground">
+                    {Array.isArray(order.items) && order.items.length > 0
+                      ? `${order.items.length} item${order.items.length > 1 ? 's' : ''}`
+                      : order.customer_name}
+                  </p>
                   <p className="font-display font-bold text-accent">₦{Number(order.amount).toLocaleString()}</p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {new Date(order.created_at).toLocaleDateString('en-NG', { dateStyle: 'long' })}
-                </p>
-              </div>
+                <div className="flex items-center justify-between text-xs">
+                  <p className="text-muted-foreground">
+                    {new Date(order.created_at).toLocaleDateString('en-NG', { dateStyle: 'long' })}
+                  </p>
+                  <span className="text-accent font-medium opacity-0 group-hover:opacity-100 transition">
+                    View Details →
+                  </span>
+                </div>
+              </Link>
             ))}
           </div>
         )}
