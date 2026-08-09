@@ -166,7 +166,7 @@ export default function Navbar() {
             {user ? (
               <>
                 {userName && (
-                  <span className="hidden xl:inline-flex text-sm text-[#8a8478] font-body">
+                  <span className="hidden md:inline-flex text-sm text-[#8a8478] font-body">
                     Hi, {userName}
                   </span>
                 )}

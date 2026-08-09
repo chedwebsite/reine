@@ -5,7 +5,6 @@ const cols = [
     heading: 'Shop',
     links: [
       { href: '/collections', label: 'Collections' },
-      { href: '/products', label: 'All Products' },
       { href: '/sale', label: 'Sale' },
     ],
   },
@@ -14,7 +13,7 @@ const cols = [
     links: [
       { href: '/about', label: 'About Us' },
       { href: '/contact', label: 'Contact' },
-      { href: '/careers', label: 'Careers' },
+      
     ],
   },
   {
