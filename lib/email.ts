@@ -44,12 +44,12 @@ export async function sendOrderConfirmation({
           </table>
           <p>We'll send tracking information once your order ships.</p>
           <p style="margin:24px 0">
-            <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://reineluxe.com'}/track-order?reference=${encodeURIComponent(reference)}&email=${encodeURIComponent(to)}"
+            <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://reineluxe.com'}/login?next=/orders"
                style="display:inline-block;background:#d4af37;color:#0a0a0a;padding:12px 24px;text-decoration:none;font-weight:bold;border-radius:2px">
-              Track Your Order
+              Login to View Your Orders
             </a>
           </p>
-          <p style="color:#666;font-size:13px">No account needed — use your reference and this email address.</p>
+          <p style="color:#666;font-size:13px">Sign in to your account to view your order status and tracking information.</p>
           <p style="color:#666;font-size:12px;margin-top:40px">Reine Luxe Co. · support@reineluxe.com</p>
 
         </div>
@@ -148,9 +148,9 @@ export async function sendOrderStatusUpdate({
           ${trackingNumber ? `<tr><td style="padding:8px 0;color:#666">Tracking Number</td><td style="padding:8px 0;font-weight:bold">${trackingNumber}</td></tr>` : ''}
         </table>
         <p style="margin:24px 0">
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://reineluxe.com'}/track-order?reference=${encodeURIComponent(reference)}&email=${encodeURIComponent(to)}"
+          <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://reineluxe.com'}/login?next=/orders"
              style="display:inline-block;background:#d4af37;color:#0a0a0a;padding:12px 24px;text-decoration:none;font-weight:bold;border-radius:2px">
-            Track Your Order
+            Login to View Your Orders
           </a>
         </p>
         <p style="color:#666;font-size:12px;margin-top:40px">Reine Luxe Co. · support@reineluxe.com</p>
@@ -176,4 +176,3 @@ export async function sendOrderStatusUpdate({
     throw error
   }
 }
-

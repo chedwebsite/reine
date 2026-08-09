@@ -116,13 +116,13 @@ function OrderConfirmationContent() {
             </Link>
           </div>
 
-          <p className="text-sm text-muted-foreground">
+          {/* <p className="text-sm text-muted-foreground">
             Save your reference above — you can track anytime at{' '}
             <Link href="/track-order" className="text-accent hover:text-accent/80">
               Track Order
             </Link>
             {' '}with the email used at checkout. No account required.
-          </p>
+          </p> */}
 
 
           {/* Support */}

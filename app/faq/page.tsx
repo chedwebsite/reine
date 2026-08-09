@@ -26,9 +26,10 @@ const faqs = [
     a: 'Absolutely. Every item sold on Reine Luxe Co. is 100% authentic and sourced directly from verified luxury brands and artisans.',
   },
   {
-    q: 'How do I track my order?',
-    a: 'No account needed. Visit Track Order and enter your Paystack payment reference plus the email used at checkout. Logged-in customers can also view full history under My Orders. Once your order ships, a courier tracking number is emailed to you.',
-  },
+q: 'How do I track my order?',
+a: 'Log in to your account, then click Orders in the navigation bar to view your orders and check your order status. Your order details and tracking information will be available there once your order has been shipped.',
+},
+
   {
     q: 'Do I need an account to checkout?',
     a: 'No. You can checkout as a guest. Use your email and payment reference anytime on the Track Order page. Creating an account is optional and lets you save favorites and view all past orders in one place.',

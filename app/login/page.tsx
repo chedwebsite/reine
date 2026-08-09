@@ -10,6 +10,7 @@ function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
+  const next = searchParams.get('next') ?? '/'
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -35,7 +36,7 @@ function LoginContent() {
           setShowResend(true)
         }
       } else {
-        router.push('/')
+        router.push(next)
       }
     } else {
       const { error, data } = await supabase.auth.signUp({ email, password })
@@ -85,7 +86,7 @@ function LoginContent() {
   const handleGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${location.origin}/auth/callback` },
+      options: { redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     })
   }
 
@@ -102,7 +103,7 @@ function LoginContent() {
 
   const handleSuccessModalClose = () => {
     setShowSuccessModal(false)
-    router.push('/')
+    router.push(next)
   }
 
   return (
