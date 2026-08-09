@@ -19,33 +19,59 @@ export async function sendOrderConfirmation({
   reference: string
   amount: number
 }) {
-  await transporter.sendMail({
-    from: `"Reine Luxe" <${process.env.GMAIL_USER}>`,
+  console.log('[Email] sendOrderConfirmation called with:', {
     to,
-    subject: 'Your Order is Confirmed – Reine Luxe',
-    html: `
-      <div style="font-family:serif;max-width:600px;margin:0 auto;color:#1a1a1a">
-        <h1 style="font-size:28px;letter-spacing:4px">REINE LUXE</h1>
-        <h2>Order Confirmed</h2>
-        <p>Dear ${customerName},</p>
-        <p>Thank you for your purchase. Your order has been confirmed.</p>
-        <table style="width:100%;border-collapse:collapse;margin:24px 0">
-          <tr><td style="padding:8px 0;color:#666">Reference</td><td style="padding:8px 0;font-weight:bold">${reference}</td></tr>
-          <tr><td style="padding:8px 0;color:#666">Amount</td><td style="padding:8px 0;font-weight:bold">₦${amount.toLocaleString()}</td></tr>
-        </table>
-        <p>We'll send tracking information once your order ships.</p>
-        <p style="margin:24px 0">
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://reineluxe.com'}/track-order?reference=${encodeURIComponent(reference)}&email=${encodeURIComponent(to)}"
-             style="display:inline-block;background:#d4af37;color:#0a0a0a;padding:12px 24px;text-decoration:none;font-weight:bold;border-radius:2px">
-            Track Your Order
-          </a>
-        </p>
-        <p style="color:#666;font-size:13px">No account needed — use your reference and this email address.</p>
-        <p style="color:#666;font-size:12px;margin-top:40px">Reine Luxe Co. · support@reineluxe.com</p>
-
-      </div>
-    `,
+    customerName,
+    reference,
+    amount,
+    from: process.env.GMAIL_USER
   })
+
+  try {
+    const result = await transporter.sendMail({
+      from: `"Reine Luxe" <${process.env.GMAIL_USER}>`,
+      to,
+      subject: 'Your Order is Confirmed – Reine Luxe',
+      html: `
+        <div style="font-family:serif;max-width:600px;margin:0 auto;color:#1a1a1a">
+          <h1 style="font-size:28px;letter-spacing:4px">REINE LUXE</h1>
+          <h2>Order Confirmed</h2>
+          <p>Dear ${customerName},</p>
+          <p>Thank you for your purchase. Your order has been confirmed.</p>
+          <table style="width:100%;border-collapse:collapse;margin:24px 0">
+            <tr><td style="padding:8px 0;color:#666">Reference</td><td style="padding:8px 0;font-weight:bold">${reference}</td></tr>
+            <tr><td style="padding:8px 0;color:#666">Amount</td><td style="padding:8px 0;font-weight:bold">₦${amount.toLocaleString()}</td></tr>
+          </table>
+          <p>We'll send tracking information once your order ships.</p>
+          <p style="margin:24px 0">
+            <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://reineluxe.com'}/track-order?reference=${encodeURIComponent(reference)}&email=${encodeURIComponent(to)}"
+               style="display:inline-block;background:#d4af37;color:#0a0a0a;padding:12px 24px;text-decoration:none;font-weight:bold;border-radius:2px">
+              Track Your Order
+            </a>
+          </p>
+          <p style="color:#666;font-size:13px">No account needed — use your reference and this email address.</p>
+          <p style="color:#666;font-size:12px;margin-top:40px">Reine Luxe Co. · support@reineluxe.com</p>
+
+        </div>
+      `,
+    })
+
+    console.log('[Email] sendOrderConfirmation success:', {
+      messageId: result.messageId,
+      to,
+      reference
+    })
+
+    return result
+  } catch (error) {
+    console.error('[Email] sendOrderConfirmation error:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      to,
+      customerName,
+      reference
+    })
+    throw error
+  }
 }
 
 const STATUS_META: Record<string, { subject: string; heading: string; body: string }> = {
@@ -97,10 +123,19 @@ export async function sendOrderStatusUpdate({
   const meta = STATUS_META[status]
   if (!meta) return
 
-  await transporter.sendMail({
-    from: `"Reine Luxe" <${process.env.GMAIL_USER}>`,
+  console.log('[Email] sendOrderStatusUpdate called with:', {
     to,
-    subject: meta.subject,
+    customerName,
+    reference,
+    status,
+    from: process.env.GMAIL_USER
+  })
+
+  try {
+    const result = await transporter.sendMail({
+      from: `"Reine Luxe" <${process.env.GMAIL_USER}>`,
+      to,
+      subject: meta.subject,
     html: `
       <div style="font-family:serif;max-width:600px;margin:0 auto;color:#1a1a1a">
         <h1 style="font-size:28px;letter-spacing:4px">REINE LUXE</h1>
@@ -121,6 +156,24 @@ export async function sendOrderStatusUpdate({
         <p style="color:#666;font-size:12px;margin-top:40px">Reine Luxe Co. · support@reineluxe.com</p>
       </div>
     `,
-  })
+    })
+
+    console.log('[Email] sendOrderStatusUpdate success:', {
+      messageId: result.messageId,
+      to,
+      status
+    })
+
+    return result
+  } catch (error) {
+    console.error('[Email] sendOrderStatusUpdate error:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      to,
+      status,
+      customerName,
+      reference
+    })
+    throw error
+  }
 }
 

@@ -32,6 +32,10 @@ export async function POST(request: NextRequest) {
     const reference = result.data?.reference
     if (reference) {
       const supabase = await createClient()
+
+      // Use Paystack reference as the tracking number
+      const trackingNumber = reference
+
       const { data: order } = await supabase.from('orders').insert({
         customer_email: email,
         customer_name: customerName,
@@ -43,6 +47,8 @@ export async function POST(request: NextRequest) {
         user_id: userId ?? null,
         // Store shipping address on the order
         shipping_address: shippingAddress ?? null,
+        // Use Paystack reference as tracking number
+        tracking_number: trackingNumber,
       }).select().single()
 
       // Send order received email

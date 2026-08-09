@@ -80,13 +80,22 @@ export async function PATCH(req: NextRequest) {
   // Fetch current order to append to status_history
   const { data: existing } = await supabase
     .from('orders')
-    .select('status, status_history, customer_email, customer_name')
+    .select('*')
     .eq('id', id)
     .single()
 
   if (!existing) {
     return NextResponse.json({ error: 'Order not found' }, { status: 404 })
   }
+
+  console.log('[Admin] Order data from database:', {
+    id: existing.id,
+    customer_email: existing.customer_email,
+    customer_name: existing.customer_name,
+    paystack_reference: existing.paystack_reference,
+    status: existing.status,
+    user_id: existing.user_id
+  })
 
   const history = Array.isArray(existing.status_history) ? existing.status_history : []
   const newEntry = {
@@ -115,25 +124,37 @@ export async function PATCH(req: NextRequest) {
 
   // Send status update email on every status change
   if (updated) {
+    const recipientEmail = updated.customer_email
+    const customerName = updated.customer_name
+    const orderReference = updated.paystack_reference ?? id
+
     console.log('[Email] Attempting to send status update email:', {
-      to: updated.customer_email,
-      customerName: updated.customer_name,
-      reference: updated.paystack_reference ?? id,
+      to: recipientEmail,
+      customerName,
+      reference: orderReference,
       status,
       hasTrackingNumber: !!trackingNumber,
+      orderId: updated.id,
     })
 
     try {
       await sendOrderStatusUpdate({
-        to: updated.customer_email,
-        customerName: updated.customer_name,
-        reference: updated.paystack_reference ?? id,
+        to: recipientEmail,
+        customerName,
+        reference: orderReference,
         status,
         trackingNumber: trackingNumber ?? undefined,
       })
-      console.log('[Email] Status update email sent successfully')
+      console.log('[Email] Status update email sent successfully to:', recipientEmail)
     } catch (emailError) {
       console.error('[Email] Failed to send status update email:', emailError)
+      console.error('[Email] Error details:', {
+        errorMessage: emailError instanceof Error ? emailError.message : 'Unknown error',
+        recipientEmail,
+        customerName,
+        orderReference,
+        status
+      })
       // Don't fail the request if email fails
     }
   }

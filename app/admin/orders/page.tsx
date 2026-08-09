@@ -57,6 +57,8 @@ export default function AdminOrdersPage() {
     setUpdating(null)
   }
 
+  const [selectedOrder, setSelectedOrder] = useState<any>(null)
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -93,25 +95,33 @@ export default function AdminOrdersPage() {
         <>
           <div className="border border-border rounded-sm overflow-hidden">
             <table className="w-full text-sm font-body">
-              <thead className="bg-secondary/50 text-muted-foreground">
+               <thead className="bg-secondary/50 text-muted-foreground">
                 <tr>
                   <th className="text-left px-4 py-3">Customer</th>
                   <th className="text-left px-4 py-3">Email</th>
+                  <th className="text-left px-4 py-3">Reference</th>
                   <th className="text-left px-4 py-3">Amount</th>
                   <th className="text-left px-4 py-3">Status</th>
+                  <th className="text-left px-4 py-3">Tracking #</th>
                   <th className="text-left px-4 py-3">Date</th>
                 </tr>
               </thead>
               <tbody>
                 {orders.map((o, i) => (
-                  <tr key={o.id} className={`border-t border-border ${i % 2 === 0 ? '' : 'bg-secondary/20'}`}>
+                  <tr
+                    key={o.id}
+                    className={`border-t border-border cursor-pointer hover:bg-secondary/30 transition ${i % 2 === 0 ? '' : 'bg-secondary/20'} ${selectedOrder?.id === o.id ? 'bg-accent/20' : ''}`}
+                    onClick={() => setSelectedOrder(o)}
+                  >
                     <td className="px-4 py-3 text-foreground">{o.customer_name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{o.customer_email}</td>
+                    <td className="px-4 py-3 text-foreground font-mono text-xs">{o.paystack_reference || '—'}</td>
                     <td className="px-4 py-3 text-foreground">₦{o.amount?.toLocaleString()}</td>
                     <td className="px-4 py-3">
                       <select
                         value={o.status ?? 'pending'}
                         disabled={updating === o.id}
+                        onClick={(e) => e.stopPropagation()}
                         onChange={e => updateStatus(o.id, e.target.value)}
                         className={`px-2 py-0.5 rounded-sm text-xs font-semibold border-0 cursor-pointer disabled:opacity-50 ${statusStyles[o.status] ?? statusStyles.pending}`}
                       >
@@ -121,6 +131,9 @@ export default function AdminOrdersPage() {
                           </option>
                         ))}
                       </select>
+                    </td>
+                    <td className="px-4 py-3 text-foreground font-mono text-xs">
+                      {o.tracking_number || '—'}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {o.created_at ? (
@@ -138,6 +151,98 @@ export default function AdminOrdersPage() {
               <p className="text-center text-muted-foreground py-12 text-sm">No orders found.</p>
             )}
           </div>
+
+          {/* Order Details Panel */}
+          {selectedOrder && (
+            <div className="border border-border rounded-sm p-6 bg-secondary/20">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-display font-bold text-foreground">Order Details</h3>
+                <button
+                  onClick={() => setSelectedOrder(null)}
+                  className="text-muted-foreground hover:text-foreground text-sm"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Customer Info */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-foreground border-b border-border pb-2">Customer Information</h4>
+                  <div className="text-sm space-y-1">
+                    <p><span className="text-muted-foreground">Name:</span> <span className="text-foreground">{selectedOrder.customer_name}</span></p>
+                    <p><span className="text-muted-foreground">Email:</span> <span className="text-foreground">{selectedOrder.customer_email}</span></p>
+                    <p><span className="text-muted-foreground">Order ID:</span> <span className="text-foreground font-mono text-xs">{selectedOrder.id}</span></p>
+                    <p><span className="text-muted-foreground">Reference:</span> <span className="text-foreground font-mono text-xs">{selectedOrder.paystack_reference || '—'}</span></p>
+                    <p><span className="text-muted-foreground">Tracking:</span> <span className="text-foreground font-mono text-xs">{selectedOrder.tracking_number || '—'}</span></p>
+                  </div>
+                </div>
+
+                {/* Order Info */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-foreground border-b border-border pb-2">Order Information</h4>
+                  <div className="text-sm space-y-1">
+                    <p><span className="text-muted-foreground">Amount:</span> <span className="text-foreground font-semibold">₦{selectedOrder.amount?.toLocaleString()}</span></p>
+                    <p><span className="text-muted-foreground">Status:</span> <span className={`px-2 py-0.5 rounded-sm text-xs font-semibold ${statusStyles[selectedOrder.status] ?? statusStyles.pending}`}>{selectedOrder.status}</span></p>
+                    <p><span className="text-muted-foreground">Created:</span> <span className="text-foreground">{new Date(selectedOrder.created_at).toLocaleString()}</span></p>
+                  </div>
+                </div>
+
+                {/* Shipping Address */}
+                {selectedOrder.shipping_address && (
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-foreground border-b border-border pb-2">Shipping Address</h4>
+                    <div className="text-sm space-y-1">
+                      <p className="text-foreground">{selectedOrder.shipping_address.address}</p>
+                      <p className="text-foreground">{selectedOrder.shipping_address.city}{selectedOrder.shipping_address.state ? `, ${selectedOrder.shipping_address.state}` : ''}</p>
+                      <p className="text-foreground">{selectedOrder.shipping_address.zip}</p>
+                      {selectedOrder.shipping_address.phone && <p className="text-muted-foreground">Phone: {selectedOrder.shipping_address.phone}</p>}
+                    </div>
+                  </div>
+                )}
+
+                {/* Items */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-foreground border-b border-border pb-2">Items</h4>
+                  <div className="space-y-2">
+                    {selectedOrder.items?.map((item: any, idx: number) => (
+                      <div key={idx} className="flex items-center gap-3 text-sm">
+                        {item.image && (
+                          <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded-sm border border-border" />
+                        )}
+                        <div className="flex-1">
+                          <p className="text-foreground font-medium">{item.name}</p>
+                          <p className="text-muted-foreground">Qty: {item.quantity} × ₦{item.price?.toLocaleString()}</p>
+                        </div>
+                        <p className="text-foreground font-semibold">₦{(item.price * item.quantity).toLocaleString()}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Status History */}
+              {selectedOrder.status_history && selectedOrder.status_history.length > 0 && (
+                <div className="mt-6 space-y-3">
+                  <h4 className="font-semibold text-foreground border-b border-border pb-2">Status History</h4>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {[...selectedOrder.status_history].reverse().map((entry: any, idx: number) => (
+                      <div key={idx} className="flex items-center justify-between text-sm py-2 border-b border-border/50 last:border-0">
+                        <div className="flex items-center gap-3">
+                          <span className={`px-2 py-0.5 rounded-sm text-xs font-semibold ${statusStyles[entry.status] ?? 'bg-gray-900/40 text-gray-400'}`}>
+                            {entry.status}
+                          </span>
+                        </div>
+                        <span className="text-muted-foreground text-xs">
+                          {new Date(entry.timestamp).toLocaleString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (
