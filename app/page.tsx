@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ChevronRight, ArrowRight } from 'lucide-react'
 import Navbar from '@/components/navbar'
 import Footer from '@/components/footer'
+import HeroSlideshow from '@/components/hero-slideshow'
 
 const collections = [
   {
@@ -42,11 +43,8 @@ export default function HomePage() {
 
       {/* ── Hero ─────────────────────────────────────────── */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        {/* Background image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1800&fit=crop')" }}
-        />
+        {/* Background slideshow */}
+        <HeroSlideshow />
         {/* Overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#080808cc] via-[#08080888] to-[#080808]" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#080808aa] via-transparent to-[#080808aa]" />
@@ -88,7 +86,7 @@ export default function HomePage() {
         </div>
 
         {/* Scroll indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-fade-in opacity-0 delay-700">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-fade-in opacity-0 delay-700 z-50">
           <span className="label-luxury opacity-40 text-[0.55rem]">Scroll</span>
           <div className="w-px h-12 bg-gradient-to-b from-[#c9a84c66] to-transparent" />
         </div>
