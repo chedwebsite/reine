@@ -113,8 +113,8 @@ export async function PATCH(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Send status update email (shipped/delivered/cancelled)
-  if (updated && (status === 'shipped' || status === 'delivered' || status === 'cancelled')) {
+  // Send status update email on every status change
+  if (updated) {
     await sendOrderStatusUpdate({
       to: updated.customer_email,
       customerName: updated.customer_name,

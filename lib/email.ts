@@ -49,6 +49,16 @@ export async function sendOrderConfirmation({
 }
 
 const STATUS_META: Record<string, { subject: string; heading: string; body: string }> = {
+  pending: {
+    subject: 'Order Received – Reine Luxe',
+    heading: 'We\'ve Received Your Order',
+    body: 'Thank you for your order! We have received it and are awaiting payment confirmation.',
+  },
+  processing: {
+    subject: 'Your Order is Being Processed – Reine Luxe',
+    heading: 'Order Being Processed',
+    body: 'Great news! Your payment has been confirmed and your order is now being prepared.',
+  },
   shipped: {
     subject: 'Your Order Has Shipped – Reine Luxe',
     heading: 'Your Order Has Shipped',
