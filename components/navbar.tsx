@@ -18,6 +18,7 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [scrolled, setScrolled] = useState(false)
+  const [userName, setUserName] = useState<string | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -39,6 +40,40 @@ export default function Navbar() {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  // Fetch user's full name from profile
+  useEffect(() => {
+    async function fetchUserName() {
+      if (!user) {
+        setUserName(null)
+        return
+      }
+
+      try {
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .maybeSingle()
+
+        if (data?.full_name) {
+          // Get first name only
+          const firstName = data.full_name.split(' ')[0]
+          setUserName(firstName)
+        } else {
+          // Fallback to email username
+          const emailName = user.email?.split('@')[0]
+          setUserName(emailName || null)
+        }
+      } catch (error) {
+        console.error('Error fetching user name:', error)
+        const emailName = user.email?.split('@')[0]
+        setUserName(emailName || null)
+      }
+    }
+
+    fetchUserName()
+  }, [user, supabase])
 
   useEffect(() => { setMobileOpen(false); setSearchOpen(false) }, [pathname])
   useEffect(() => { if (searchOpen) searchRef.current?.focus() }, [searchOpen])
@@ -67,11 +102,10 @@ export default function Navbar() {
 
   return (
     <header
-      className={`sticky top-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? 'glass border-b border-[#c9a84c22] shadow-[0_4px_30px_#00000060]'
-          : 'bg-background/90 backdrop-blur-sm border-b border-border'
-      }`}
+      className={`sticky top-0 z-50 transition-all duration-500 ${scrolled
+        ? 'glass border-b border-[#c9a84c22] shadow-[0_4px_30px_#00000060]'
+        : 'bg-background/90 backdrop-blur-sm border-b border-border'
+        }`}
     >
       <nav className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
@@ -94,9 +128,8 @@ export default function Navbar() {
                 <Link
                   key={href}
                   href={href}
-                  className={`underline-gold text-sm font-body font-light tracking-widest uppercase transition-colors duration-300 ${
-                    active ? 'text-accent active' : 'text-[#8a8478] hover:text-foreground'
-                  }`}
+                  className={`underline-gold text-sm font-body font-light tracking-widest uppercase transition-colors duration-300 ${active ? 'text-accent active' : 'text-[#8a8478] hover:text-foreground'
+                    }`}
                 >
                   {label}
                 </Link>
@@ -132,6 +165,11 @@ export default function Navbar() {
 
             {user ? (
               <>
+                {userName && (
+                  <span className="hidden xl:inline-flex text-sm text-[#8a8478] font-body">
+                    Hi, {userName}
+                  </span>
+                )}
                 <Link href="/favorites" className="p-2 text-[#8a8478] hover:text-accent transition-colors duration-300" title="Favorites">
                   <Heart size={19} />
                 </Link>
@@ -164,7 +202,7 @@ export default function Navbar() {
             )}
 
 
-              {/* Cart */}
+            {/* Cart */}
             <Link href="/cart" className="relative p-2 text-[#8a8478] hover:text-accent transition-colors duration-300" title="Cart">
               <ShoppingCart size={19} />
               {cartCount > 0 && (
@@ -198,9 +236,8 @@ export default function Navbar() {
 
       {/* Mobile/tablet menu — below lg */}
       <div
-        className={`lg:hidden block overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          mobileOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
-        }`}
+        className={`lg:hidden block overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${mobileOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+          }`}
       >
         <div className="glass border-t border-[#c9a84c22] px-4 py-5 flex flex-col gap-1">
           {/* Mobile search */}
@@ -227,11 +264,10 @@ export default function Navbar() {
               <Link
                 key={href}
                 href={href}
-                className={`px-3 py-3 text-sm font-body font-light tracking-widest uppercase transition-all duration-200 rounded-sm ${
-                  active
-                    ? 'text-accent bg-[#c9a84c0a]'
-                    : 'text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c]'
-                }`}
+                className={`px-3 py-3 text-sm font-body font-light tracking-widest uppercase transition-all duration-200 rounded-sm ${active
+                  ? 'text-accent bg-[#c9a84c0a]'
+                  : 'text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c]'
+                  }`}
               >
                 {label}
               </Link>
@@ -269,6 +305,11 @@ export default function Navbar() {
 
           {user && (
             <div className="mt-3 pt-3 border-t border-[#1c1c1c] flex flex-col gap-1">
+              {userName && (
+                <div className="px-3 py-2 text-sm font-body text-accent">
+                  Hi, {userName}
+                </div>
+              )}
               <Link href="/cart" className="px-3 py-3 rounded-sm text-sm font-body text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c] transition-all flex items-center justify-between gap-3">
                 <span className="flex items-center gap-3"><ShoppingCart size={15} /> Cart</span>
                 {cartCount > 0 && (

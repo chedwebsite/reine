@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
-import { Loader2, Eye, EyeOff, Mail, KeyRound } from 'lucide-react'
+import { Loader2, Eye, EyeOff, Mail, KeyRound, CheckCircle2 } from 'lucide-react'
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const [resetEmail, setResetEmail] = useState('')
   const [resetLoading, setResetLoading] = useState(false)
   const [showResend, setShowResend] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,7 +31,6 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
         setMessage({ type: 'error', text: error.message })
-        // If email not confirmed, show resend option
         if (error.message.toLowerCase().includes('email not confirmed')) {
           setShowResend(true)
         }
@@ -88,6 +89,22 @@ export default function LoginPage() {
     })
   }
 
+  useEffect(() => {
+    const confirmed = searchParams.get('confirmed')
+    const error = searchParams.get('error')
+
+    if (confirmed === 'true') {
+      setShowSuccessModal(true)
+    } else if (error === 'confirmation_failed') {
+      setMessage({ type: 'error', text: 'Email confirmation failed. Please try again or contact support.' })
+    }
+  }, [searchParams])
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false)
+    router.push('/')
+  }
+
   return (
     <main className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md space-y-8">
@@ -99,6 +116,30 @@ export default function LoginPage() {
             {showReset ? 'Reset Password' : mode === 'login' ? 'Welcome back' : 'Create account'}
           </h1>
         </div>
+
+        {showSuccessModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div className="bg-background border border-border rounded-sm p-8 max-w-md w-full shadow-2xl">
+              <div className="text-center space-y-4">
+                <div className="flex justify-center">
+                  <CheckCircle2 size={64} className="text-green-500" />
+                </div>
+                <h2 className="text-2xl font-display font-bold text-foreground">
+                  Email Confirmed!
+                </h2>
+                <p className="text-muted-foreground font-body">
+                  Your email has been successfully confirmed. You can now sign in to your account.
+                </p>
+                <button
+                  onClick={handleSuccessModalClose}
+                  className="w-full bg-accent text-[#0a0a0a] py-3 rounded-sm font-display font-semibold hover:bg-accent/90 transition"
+                >
+                  Continue to Website
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {showReset ? (
           <form onSubmit={handleResetPassword} className="space-y-4">
@@ -223,5 +264,13 @@ export default function LoginPage() {
         )}
       </div>
     </main>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-accent" /></div>}>
+      <LoginContent />
+    </Suspense>
   )
 }

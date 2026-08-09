@@ -9,12 +9,22 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient()
-    await supabase.auth.exchangeCodeForSession(code)
-  }
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
 
-  // For password recovery, redirect to account page where user can set new password
-  if (type === 'recovery') {
-    return NextResponse.redirect(`${origin}/account?recovery=true`)
+    if (error) {
+      // If there's an error, redirect to login with error message
+      return NextResponse.redirect(`${origin}/login?error=confirmation_failed`)
+    }
+
+    // For email confirmation, redirect to success page
+    if (type === 'signup' || type === 'email') {
+      return NextResponse.redirect(`${origin}/login?confirmed=true`)
+    }
+
+    // For password recovery, redirect to account page where user can set new password
+    if (type === 'recovery') {
+      return NextResponse.redirect(`${origin}/account?recovery=true`)
+    }
   }
 
   return NextResponse.redirect(`${origin}${next}`)
