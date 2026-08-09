@@ -54,6 +54,11 @@ const STATUS_META: Record<string, { subject: string; heading: string; body: stri
     heading: 'We\'ve Received Your Order',
     body: 'Thank you for your order! We have received it and are awaiting payment confirmation.',
   },
+  paid: {
+    subject: 'Payment Confirmed – Reine Luxe',
+    heading: 'Payment Confirmed',
+    body: 'Great news! Your payment has been confirmed and your order is now being prepared.',
+  },
   processing: {
     subject: 'Your Order is Being Processed – Reine Luxe',
     heading: 'Order Being Processed',

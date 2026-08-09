@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { initializePayment } from '@/lib/paystack'
 import { createClient } from '@/lib/supabase-server'
+import { sendOrderStatusUpdate } from '@/lib/email'
 import { applyRateLimit } from '@/lib/security'
 import { paymentInitializeSchema } from '@/lib/validation'
 
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     const reference = result.data?.reference
     if (reference) {
       const supabase = await createClient()
-      await supabase.from('orders').insert({
+      const { data: order } = await supabase.from('orders').insert({
         customer_email: email,
         customer_name: customerName,
         amount,
@@ -42,7 +43,23 @@ export async function POST(request: NextRequest) {
         user_id: userId ?? null,
         // Store shipping address on the order
         shipping_address: shippingAddress ?? null,
-      })
+      }).select().single()
+
+      // Send order received email
+      if (order) {
+        console.log('[Email] Sending order received email to:', email)
+        try {
+          await sendOrderStatusUpdate({
+            to: email,
+            customerName,
+            reference,
+            status: 'pending',
+          })
+          console.log('[Email] Order received email sent successfully')
+        } catch (emailError) {
+          console.error('[Email] Failed to send order received email:', emailError)
+        }
+      }
     }
 
     return NextResponse.json(result)

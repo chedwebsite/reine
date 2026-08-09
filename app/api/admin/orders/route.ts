@@ -115,13 +115,27 @@ export async function PATCH(req: NextRequest) {
 
   // Send status update email on every status change
   if (updated) {
-    await sendOrderStatusUpdate({
+    console.log('[Email] Attempting to send status update email:', {
       to: updated.customer_email,
       customerName: updated.customer_name,
       reference: updated.paystack_reference ?? id,
       status,
-      trackingNumber: trackingNumber ?? undefined,
-    }).catch(console.error)
+      hasTrackingNumber: !!trackingNumber,
+    })
+
+    try {
+      await sendOrderStatusUpdate({
+        to: updated.customer_email,
+        customerName: updated.customer_name,
+        reference: updated.paystack_reference ?? id,
+        status,
+        trackingNumber: trackingNumber ?? undefined,
+      })
+      console.log('[Email] Status update email sent successfully')
+    } catch (emailError) {
+      console.error('[Email] Failed to send status update email:', emailError)
+      // Don't fail the request if email fails
+    }
   }
 
   return NextResponse.json(updated)

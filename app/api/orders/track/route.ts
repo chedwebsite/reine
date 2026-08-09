@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { applyRateLimit } from '@/lib/security'
 import { orderTrackSchema } from '@/lib/validation'
+import { sendOrderStatusUpdate } from '@/lib/email'
 
 /**
  * Public order lookup — no auth required.
@@ -45,6 +46,15 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       )
     }
+
+    // Send status update email on every track lookup
+    sendOrderStatusUpdate({
+      to: order.customer_email,
+      customerName: order.customer_name,
+      reference: order.paystack_reference,
+      status: order.status ?? 'pending',
+      trackingNumber: order.tracking_number ?? undefined,
+    }).catch(console.error)
 
     // Return a safe public payload (no internal user_id)
     return NextResponse.json({

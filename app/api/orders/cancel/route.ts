@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { sendOrderStatusUpdate } from '@/lib/email'
 import { z } from 'zod'
 
 const cancelOrderSchema = z.object({
@@ -62,6 +63,20 @@ export async function POST(request: NextRequest) {
 
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 500 })
+  }
+
+  // Send cancellation email
+  console.log('[Email] Sending cancellation email to:', order.customer_email)
+  try {
+    await sendOrderStatusUpdate({
+      to: order.customer_email,
+      customerName: order.customer_name,
+      reference: order.paystack_reference ?? id,
+      status: 'cancelled',
+    })
+    console.log('[Email] Cancellation email sent successfully')
+  } catch (emailError) {
+    console.error('[Email] Failed to send cancellation email:', emailError)
   }
 
   return NextResponse.json({ success: true })

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { supabase } from '@/lib/supabase'
-import { sendOrderConfirmation } from '@/lib/email'
+import { sendOrderConfirmation, sendOrderStatusUpdate } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   const rawBody = await request.text()
@@ -26,12 +26,33 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (order) {
-      await sendOrderConfirmation({
-        to: customer.email,
-        customerName: order.customer_name ?? metadata?.customerName ?? customer.email,
-        reference,
-        amount: amount / 100,
-      }).catch(console.error)
+      // Send order confirmation email
+      console.log('[Email] Webhook: Sending order confirmation to:', customer.email)
+      try {
+        await sendOrderConfirmation({
+          to: customer.email,
+          customerName: order.customer_name ?? metadata?.customerName ?? customer.email,
+          reference,
+          amount: amount / 100,
+        })
+        console.log('[Email] Webhook: Order confirmation sent successfully')
+      } catch (emailError) {
+        console.error('[Email] Webhook: Failed to send order confirmation:', emailError)
+      }
+
+      // Send payment success status update email
+      console.log('[Email] Webhook: Sending payment success status update to:', customer.email)
+      try {
+        await sendOrderStatusUpdate({
+          to: customer.email,
+          customerName: order.customer_name ?? metadata?.customerName ?? customer.email,
+          reference,
+          status: 'paid',
+        })
+        console.log('[Email] Webhook: Payment success status update sent successfully')
+      } catch (emailError) {
+        console.error('[Email] Webhook: Failed to send payment success status update:', emailError)
+      }
     }
   }
 

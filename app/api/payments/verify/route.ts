@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyPayment } from '@/lib/paystack'
 import { createClient } from '@/lib/supabase-server'
-import { sendOrderConfirmation } from '@/lib/email'
+import { sendOrderConfirmation, sendOrderStatusUpdate } from '@/lib/email'
 import { applyRateLimit } from '@/lib/security'
 import { paymentVerifySchema } from '@/lib/validation'
 
@@ -35,12 +35,33 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (order) {
-        await sendOrderConfirmation({
-          to: order.customer_email,
-          customerName: order.customer_name,
-          reference,
-          amount: order.amount,
-        }).catch(console.error)
+        // Send order confirmation email
+        console.log('[Email] Sending order confirmation to:', order.customer_email)
+        try {
+          await sendOrderConfirmation({
+            to: order.customer_email,
+            customerName: order.customer_name,
+            reference,
+            amount: order.amount,
+          })
+          console.log('[Email] Order confirmation sent successfully')
+        } catch (emailError) {
+          console.error('[Email] Failed to send order confirmation:', emailError)
+        }
+
+        // Send payment success status update email
+        console.log('[Email] Sending payment success status update to:', order.customer_email)
+        try {
+          await sendOrderStatusUpdate({
+            to: order.customer_email,
+            customerName: order.customer_name,
+            reference,
+            status: 'paid',
+          })
+          console.log('[Email] Payment success status update sent successfully')
+        } catch (emailError) {
+          console.error('[Email] Failed to send payment success status update:', emailError)
+        }
       }
     }
 
