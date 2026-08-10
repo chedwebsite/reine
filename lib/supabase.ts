@@ -22,6 +22,8 @@ export interface Product {
   in_stock?: boolean
   sizes?: string[]
   colors?: string[]
+  /** Colors this exact main photo shows (mirrors the extra-image color tags) */
+  main_image_colors?: string[]
   images?: ProductImage[]
 }
 

@@ -67,6 +67,7 @@ export const adminProductSchema = z.object({
   in_stock: z.boolean().optional(),
   sizes: z.array(z.string()).optional(),
   colors: z.array(z.string()).optional(),
+  main_image_colors: z.array(z.string()).optional(),
   images: z.array(
     z.object({
       url: z.string().url('Invalid image URL'),

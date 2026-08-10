@@ -3,14 +3,15 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Upload, ImagePlus } from 'lucide-react'
+import { uploadProductImage } from '@/lib/upload-image'
 
 const CATEGORIES = ['Haute Couture', 'Accessories', 'Jewelry']
 
 const empty = {
   name: '', category: 'Haute Couture', price: '', image: '',
   description: '', rating: '5', reviews: '0', in_stock: true, sizes: '',
-  colors: '', imagesLines: '',
+  colors: '', main_image_colors: '', imagesLines: '',
 }
 
 export default function ProductFormPage() {
@@ -20,6 +21,7 @@ export default function ProductFormPage() {
   const [form, setForm] = useState(empty)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [uploading, setUploading] = useState<'main' | 'extra' | null>(null)
 
   useEffect(() => {
     if (!isNew) {
@@ -30,6 +32,7 @@ export default function ProductFormPage() {
           price: String(p.price), rating: String(p.rating), reviews: String(p.reviews),
           sizes: Array.isArray(p.sizes) ? p.sizes.join(', ') : '',
           colors: Array.isArray(p.colors) ? p.colors.join(', ') : '',
+          main_image_colors: Array.isArray(p.main_image_colors) ? p.main_image_colors.join(', ') : '',
           imagesLines: Array.isArray(p.images)
             ? p.images.map((im: any) => im.url + (Array.isArray(im.colors) && im.colors.length ? ` | ${im.colors.join(', ')}` : '')).join('\n')
             : '',
@@ -39,6 +42,24 @@ export default function ProductFormPage() {
 
   function set(field: string, value: any) {
     setForm(f => ({ ...f, [field]: value }))
+  }
+
+  async function handleUpload(file: File | undefined, target: 'main' | 'extra') {
+    if (!file) return
+    setUploading(target)
+    setError('')
+    try {
+      const url = await uploadProductImage(file)
+      if (target === 'main') {
+        set('image', url)
+      } else {
+        setForm(f => ({ ...f, imagesLines: f.imagesLines ? `${f.imagesLines.trimEnd()}\n${url}` : url }))
+      }
+    } catch (e: any) {
+      setError(e?.message ?? 'Upload failed — is the storage bucket set up? (see supabase/storage_setup.sql)')
+    } finally {
+      setUploading(null)
+    }
   }
 
   async function submit(e: React.FormEvent) {
@@ -52,6 +73,7 @@ export default function ProductFormPage() {
       reviews: Number(form.reviews),
       sizes: form.sizes ? form.sizes.split(',').map((s: string) => s.trim().toUpperCase()).filter(Boolean) : [],
       colors: form.colors ? form.colors.split(',').map((c: string) => c.trim()).filter(Boolean) : [],
+      main_image_colors: form.main_image_colors ? form.main_image_colors.split(',').map((c: string) => c.trim()).filter(Boolean) : [],
       images: form.imagesLines
         ? form.imagesLines.split('\n').map((line: string) => {
             const trimmed = line.trim()
@@ -111,8 +133,35 @@ export default function ProductFormPage() {
           </div>
 
           <div className="col-span-2 space-y-1">
-            <label className="text-xs text-muted-foreground font-body">Image URL</label>
-            <input required className={field} value={form.image} onChange={e => set('image', e.target.value)} />
+            <label className="text-xs text-muted-foreground font-body">Main Image</label>
+            <div className="flex gap-3 items-end">
+              <input
+                required
+                className={field}
+                value={form.image}
+                onChange={e => set('image', e.target.value)}
+                placeholder="https://..."
+              />
+              <label className="shrink-0 cursor-pointer inline-flex items-center gap-2 border border-border rounded-sm px-3 py-2 text-xs font-body text-muted-foreground hover:border-accent/50 hover:text-foreground transition">
+                <Upload size={14} />
+                {uploading === 'main' ? 'Uploading...' : 'Upload local file'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploading !== null}
+                  onChange={e => handleUpload(e.target.files?.[0], 'main')}
+                />
+              </label>
+            </div>
+            <p className="text-[11px] text-muted-foreground/60">Uploads are stored in your Supabase <code>product-images</code> bucket (see supabase/storage_setup.sql).</p>
+          </div>
+
+          <div className="col-span-2 space-y-1">
+            <label className="text-xs text-muted-foreground font-body">
+              Main Image Colours <span className="text-muted-foreground/60">(comma-separated — which colours this photo shows. Leave blank to match every colour, e.g. Red, Black)</span>
+            </label>
+            <input className={field} value={form.main_image_colors} onChange={e => set('main_image_colors', e.target.value)} placeholder="Red, Black, Gold" />
           </div>
 
           <div className="col-span-2 space-y-1">
@@ -155,6 +204,17 @@ export default function ProductFormPage() {
               onChange={e => set('imagesLines', e.target.value)}
               placeholder={'https://example.com/red.jpg | Red\nhttps://example.com/black.jpg | Black'}
             />
+            <label className="inline-flex cursor-pointer items-center gap-2 border border-border rounded-sm px-3 py-2 text-xs font-body text-muted-foreground hover:border-accent/50 hover:text-foreground transition">
+              <ImagePlus size={14} />
+              {uploading === 'extra' ? 'Uploading...' : 'Upload & append line'}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={uploading !== null}
+                onChange={e => handleUpload(e.target.files?.[0], 'extra')}
+              />
+            </label>
           </div>
 
           <div className="col-span-2 flex items-center gap-3">

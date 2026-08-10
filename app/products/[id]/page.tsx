@@ -71,13 +71,22 @@ export default function ProductDetailPage() {
   }, [isFav, product, user, router])
 
   // When a color is selected, switch the main image to the first tagged one
+  // (main image tags are respected just like extra image tags)
   useEffect(() => {
     if (!product) return
     if (!selectedColor) {
       setActiveImage(product.image)
       return
     }
-    const match = (product.images ?? []).find(im => Array.isArray(im.colors) && im.colors.includes(selectedColor))
+    const mainColors =
+      product.main_image_colors && product.main_image_colors.length > 0
+        ? product.main_image_colors
+        : (product.colors ?? [])
+    const allImages = [
+      { url: product.image, colors: mainColors },
+      ...(product.images ?? []),
+    ]
+    const match = allImages.find(im => Array.isArray(im.colors) && im.colors.includes(selectedColor))
     setActiveImage(match?.url ?? product.image)
   }, [selectedColor, product])
 
@@ -110,7 +119,15 @@ export default function ProductDetailPage() {
   }
 
   const galleryImages = [
-    { url: product.image, colors: product.colors ?? [] },
+    {
+      url: product.image,
+      // If the main photo has explicit color tags, use them (like extra images);
+      // otherwise fall back to tagging it with every product color.
+      colors:
+        product.main_image_colors && product.main_image_colors.length > 0
+          ? product.main_image_colors
+          : (product.colors ?? []),
+    },
     ...(product.images ?? []),
   ]
 
