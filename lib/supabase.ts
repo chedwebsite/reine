@@ -5,6 +5,11 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholde
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+export interface ProductImage {
+  url: string
+  colors?: string[]
+}
+
 export interface Product {
   id: string
   name: string
@@ -16,6 +21,8 @@ export interface Product {
   description?: string
   in_stock?: boolean
   sizes?: string[]
+  colors?: string[]
+  images?: ProductImage[]
 }
 
 export interface Order {

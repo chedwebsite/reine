@@ -213,7 +213,7 @@ export default function AdminOrdersPage() {
                         <div className="flex-1">
                           <p className="text-foreground font-medium">{item.name}</p>
                           <p className="text-muted-foreground">
-                            {item.size ? `Size: ${item.size} · ` : ''}Qty: {item.quantity} × ₦{item.price?.toLocaleString()}
+                            {item.size ? `Size: ${item.size} · ` : ''}{item.color ? `Color: ${item.color} · ` : ''}Qty: {item.quantity} × ₦{item.price?.toLocaleString()}
                           </p>
                         </div>
                         <p className="text-foreground font-semibold">₦{(item.price * item.quantity).toLocaleString()}</p>

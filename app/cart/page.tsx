@@ -13,6 +13,7 @@ interface CartItem {
   quantity: number
   image: string
   size?: string
+  color?: string
 }
 
 export default function CartPage() {
@@ -62,8 +63,8 @@ export default function CartPage() {
   const tax = subtotal * 0.1
   const total = subtotal + shipping + tax
 
-  // Composite key so the same product in different sizes are separate line items
-  const itemKey = (item: CartItem) => `${item.id}:${item.size || 'default'}`
+  // Composite key so the same product in different sizes/colours are separate line items
+  const itemKey = (item: CartItem) => `${item.id}:${item.size || 'default'}:${item.color || 'default'}`
 
   if (loading) {
     return (
@@ -120,6 +121,11 @@ export default function CartPage() {
                       {item.size && (
                         <p className="text-xs text-muted-foreground font-body mt-1 uppercase tracking-wider">
                           Size: {item.size}
+                        </p>
+                      )}
+                      {item.color && (
+                        <p className="text-xs text-muted-foreground font-body mt-1 uppercase tracking-wider">
+                          Color: {item.color}
                         </p>
                       )}
                       <p className="text-accent font-semibold mt-2">

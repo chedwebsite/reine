@@ -53,6 +53,7 @@ export default function AdminProductsPage() {
               <tr>
                 <th className="text-left px-4 py-3">Product</th>
                 <th className="text-left px-4 py-3">Category</th>
+                <th className="text-left px-4 py-3">Colors</th>
                 <th className="text-left px-4 py-3">Price</th>
                 <th className="text-left px-4 py-3">Stock</th>
                 <th className="text-right px-4 py-3">Actions</th>
@@ -66,6 +67,19 @@ export default function AdminProductsPage() {
                     <span className="text-foreground font-medium">{p.name}</span>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{p.category}</td>
+                  <td className="px-4 py-3">
+                    {Array.isArray(p.colors) && p.colors.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {p.colors.map(c => (
+                          <span key={c} className="px-2 py-0.5 rounded-sm bg-secondary/60 border border-border text-xs text-foreground">
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground/50">—</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-foreground">₦{p.price.toLocaleString()}</td>
                   <td className="px-4 py-3">
                     <button

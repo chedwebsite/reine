@@ -21,7 +21,7 @@ const jost = Jost({
 export const metadata: Metadata = {
   title: 'Reine Luxe Co.',
   description: 'Luxury Fashion & Accessories - Exclusive Collections',
-  generator: 'v0.app',
+  generator: 'ChedWebsite',
   icons: {
     icon: [
       {

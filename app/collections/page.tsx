@@ -72,7 +72,8 @@ function CollectionsContent() {
 
   const addToCart = (product: Product) => {
     if (!user) { window.location.href = '/login'; return }
-    if (Array.isArray(product.sizes) && product.sizes.length > 0) {
+    if ((Array.isArray(product.sizes) && product.sizes.length > 0) ||
+        (Array.isArray(product.colors) && product.colors.length > 0)) {
       window.location.href = `/products/${product.id}`
       return
     }

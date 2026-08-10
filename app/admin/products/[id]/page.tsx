@@ -10,6 +10,7 @@ const CATEGORIES = ['Haute Couture', 'Accessories', 'Jewelry']
 const empty = {
   name: '', category: 'Haute Couture', price: '', image: '',
   description: '', rating: '5', reviews: '0', in_stock: true, sizes: '',
+  colors: '', imagesLines: '',
 }
 
 export default function ProductFormPage() {
@@ -24,7 +25,15 @@ export default function ProductFormPage() {
     if (!isNew) {
       fetch(`/api/admin/products/${params.id}`)
         .then(r => r.json())
-        .then(p => setForm({ ...p, price: String(p.price), rating: String(p.rating), reviews: String(p.reviews), sizes: Array.isArray(p.sizes) ? p.sizes.join(', ') : '' }))
+        .then(p => setForm({
+          ...p,
+          price: String(p.price), rating: String(p.rating), reviews: String(p.reviews),
+          sizes: Array.isArray(p.sizes) ? p.sizes.join(', ') : '',
+          colors: Array.isArray(p.colors) ? p.colors.join(', ') : '',
+          imagesLines: Array.isArray(p.images)
+            ? p.images.map((im: any) => im.url + (Array.isArray(im.colors) && im.colors.length ? ` | ${im.colors.join(', ')}` : '')).join('\n')
+            : '',
+        }))
     }
   }, [params.id, isNew])
 
@@ -42,6 +51,19 @@ export default function ProductFormPage() {
       rating: Number(form.rating),
       reviews: Number(form.reviews),
       sizes: form.sizes ? form.sizes.split(',').map((s: string) => s.trim().toUpperCase()).filter(Boolean) : [],
+      colors: form.colors ? form.colors.split(',').map((c: string) => c.trim()).filter(Boolean) : [],
+      images: form.imagesLines
+        ? form.imagesLines.split('\n').map((line: string) => {
+            const trimmed = line.trim()
+            if (!trimmed) return null
+            const [url, tagPart] = trimmed.split('|').map(s => s.trim())
+            if (!url) return null
+            return {
+              url,
+              colors: tagPart ? tagPart.split(',').map((c: string) => c.trim()).filter(Boolean) : [],
+            }
+          }).filter(Boolean)
+        : [],
     }
     const res = isNew
       ? await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
@@ -113,6 +135,26 @@ export default function ProductFormPage() {
               Available Sizes <span className="text-muted-foreground/60">(comma-separated, e.g. XS, S, M, L, XL — leave blank for items without sizes)</span>
             </label>
             <input className={field} value={form.sizes} onChange={e => set('sizes', e.target.value)} placeholder="XS, S, M, L, XL" />
+          </div>
+
+          <div className="col-span-2 space-y-1">
+            <label className="text-xs text-muted-foreground font-body">
+              Available Colors <span className="text-muted-foreground/60">(comma-separated, e.g. Red, Black, Gold — leave blank if not applicable)</span>
+            </label>
+            <input className={field} value={form.colors} onChange={e => set('colors', e.target.value)} placeholder="Red, Black, Gold" />
+          </div>
+
+          <div className="col-span-2 space-y-1">
+            <label className="text-xs text-muted-foreground font-body">
+              Extra Images (one per line) <span className="text-muted-foreground/60">format: <code>URL | Color1, Color2</code> — the tag links an image to a color so it highlights when that color is selected</span>
+            </label>
+            <textarea
+              rows={4}
+              className={`${field} font-mono`}
+              value={form.imagesLines}
+              onChange={e => set('imagesLines', e.target.value)}
+              placeholder={'https://example.com/red.jpg | Red\nhttps://example.com/black.jpg | Black'}
+            />
           </div>
 
           <div className="col-span-2 flex items-center gap-3">

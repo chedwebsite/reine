@@ -17,10 +17,12 @@ export default function ProductDetailPage() {
   const [toast, setToast] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState<string>('')
+  const [selectedColor, setSelectedColor] = useState<string>('')
+  const [activeImage, setActiveImage] = useState<string>('')
 
   useEffect(() => {
     supabase.from('products').select('*').eq('id', id).single()
-      .then(({ data }) => { setProduct(data); setLoading(false) })
+      .then(({ data }) => { setProduct(data); setActiveImage(data?.image ?? ''); setLoading(false) })
   }, [id])
 
   useEffect(() => {
@@ -37,20 +39,22 @@ export default function ProductDetailPage() {
     if (!user) { router.push('/login'); return }
     if (!product) return
     const hasSizes = Array.isArray(product.sizes) && product.sizes.length > 0
+    const hasColors = Array.isArray(product.colors) && product.colors.length > 0
     if (hasSizes && !selectedSize) { showToast('Please select a size'); return }
+    if (hasColors && !selectedColor) { showToast('Please select a color'); return }
     try {
       const saved = localStorage.getItem('cart')
       const cart = saved ? JSON.parse(saved) : []
-      const key = `${product.id}:${selectedSize || 'default'}`
-      const existing = cart.find((i: any) => `${i.id}:${i.size || 'default'}` === key)
+      const key = `${product.id}:${selectedSize || 'default'}:${selectedColor || 'default'}`
+      const existing = cart.find((i: any) => `${i.id}:${i.size || 'default'}:${i.color || 'default'}` === key)
       const updated = existing
-        ? cart.map((i: any) => `${i.id}:${i.size || 'default'}` === key ? { ...i, quantity: i.quantity + quantity } : i)
-        : [...cart, { ...product, quantity, size: selectedSize || undefined }]
+        ? cart.map((i: any) => `${i.id}:${i.size || 'default'}:${i.color || 'default'}` === key ? { ...i, quantity: i.quantity + quantity } : i)
+        : [...cart, { ...product, quantity, size: selectedSize || undefined, color: selectedColor || undefined, image: activeImage || product.image }]
       localStorage.setItem('cart', JSON.stringify(updated))
       if (user) fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: updated }) })
       showToast('Added to cart')
     } catch {}
-  }, [product, quantity, selectedSize, user, router])
+  }, [product, quantity, selectedSize, selectedColor, activeImage, user, router])
 
   const toggleFavorite = useCallback(async () => {
     if (!user) { router.push('/login'); return }
@@ -65,6 +69,17 @@ export default function ProductDetailPage() {
       showToast('Added to favorites')
     }
   }, [isFav, product, user, router])
+
+  // When a color is selected, switch the main image to the first tagged one
+  useEffect(() => {
+    if (!product) return
+    if (!selectedColor) {
+      setActiveImage(product.image)
+      return
+    }
+    const match = (product.images ?? []).find(im => Array.isArray(im.colors) && im.colors.includes(selectedColor))
+    setActiveImage(match?.url ?? product.image)
+  }, [selectedColor, product])
 
   if (loading) {
     return (
@@ -93,6 +108,11 @@ export default function ProductDetailPage() {
       </main>
     )
   }
+
+  const galleryImages = [
+    { url: product.image, colors: product.colors ?? [] },
+    ...(product.images ?? []),
+  ]
 
   const productJsonLd = {
     '@context': 'https://schema.org',
@@ -135,11 +155,45 @@ export default function ProductDetailPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           {/* Image */}
-          <div className="relative h-[500px] overflow-hidden rounded-sm bg-secondary">
-            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-            {product.in_stock === false && (
-              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                <span className="text-white font-display font-bold text-2xl tracking-widest">OUT OF STOCK</span>
+          <div>
+            <div className="relative h-[500px] overflow-hidden rounded-sm bg-secondary mb-4">
+              <img
+                src={activeImage || product.image}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+              {product.in_stock === false && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                  <span className="text-white font-display font-bold text-2xl tracking-widest">OUT OF STOCK</span>
+                </div>
+              )}
+            </div>
+
+            {/* Gallery thumbnails (main + extra images, tagged by color) */}
+            {galleryImages.length > 1 && (
+              <div className="flex flex-wrap gap-3">
+                {galleryImages.map((img, idx) => {
+                  const isActive = activeImage === img.url
+                  const isColorMatch = Boolean(selectedColor && img.colors?.includes(selectedColor))
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setActiveImage(img.url)}
+                      title={img.colors?.length ? `Tagged: ${img.colors.join(', ')}` : ''}
+                      className={`w-20 h-24 overflow-hidden rounded-sm border-2 transition-all duration-200 ${
+                        isActive
+                          ? 'border-accent'
+                          : isColorMatch
+                            ? 'border-accent/80 ring-2 ring-accent/50'
+                            : 'border-border hover:border-accent/50'
+                      }`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={img.url} alt={`${product.name} view ${idx + 1}`} className="w-full h-full object-cover" />
+                    </button>
+                  )
+                })}
               </div>
             )}
           </div>
@@ -184,6 +238,35 @@ export default function ProductDetailPage() {
                       }`}
                     >
                       {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Color Selection */}
+            {Array.isArray(product.colors) && product.colors.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-body text-foreground">Color</span>
+                  <span className="text-xs text-muted-foreground/70">
+                    Selected colour highlights matching images
+                    {selectedColor ? `: ${selectedColor}` : ''}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {product.colors.map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setSelectedColor(selectedColor === c ? '' : c)}
+                      className={`px-4 py-2 border rounded-sm text-sm font-body transition-all duration-200 ${
+                        selectedColor === c
+                          ? 'border-accent bg-accent/10 text-accent'
+                          : 'border-border text-muted-foreground hover:border-accent/50 hover:text-foreground'
+                      }`}
+                    >
+                      {c}
                     </button>
                   ))}
                 </div>
