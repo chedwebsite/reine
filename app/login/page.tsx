@@ -23,6 +23,19 @@ function LoginContent() {
   const [showResend, setShowResend] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
 
+  // Auth email links (signup confirmation, password reset, resend, OAuth) must
+  // always point at the deployed project URL (NEXT_PUBLIC_SITE_URL), never the
+  // host the user happens to be on. Otherwise the "Confirm your email" link
+  // resolves to http://localhost:3000 while developing/testing instead of the
+  // real site (e.g. https://reine-mocha.vercel.app).
+  const getSiteUrl = () => {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+    return (siteUrl || window.location.origin).replace(/\/+$/, '')
+  }
+
+  const getAuthCallbackUrl = (target: string) =>
+    `${getSiteUrl()}/auth/callback?next=${encodeURIComponent(target)}`
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -39,14 +52,14 @@ function LoginContent() {
         router.push(next)
       }
     } else {
-      // Always send the confirmation link to the host the user is actually on
-      // (e.g. https://reine-mocha.vercel.app in production, localhost in dev) so
-      // the email redirect never points to 'localhost' on a deployed site.
+      // Always send the confirmation link to the deployed project URL
+      // (https://reine-mocha.vercel.app) via NEXT_PUBLIC_SITE_URL, so the email
+      // redirect never points at localhost while developing/testing.
       const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+          emailRedirectTo: getAuthCallbackUrl(next),
         },
       })
       if (error) {
@@ -65,7 +78,7 @@ function LoginContent() {
     setMessage(null)
 
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/account`,
+      redirectTo: getAuthCallbackUrl('/account'),
     })
 
     if (error) {
@@ -84,7 +97,7 @@ function LoginContent() {
       type: 'signup',
       email: email || resetEmail,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        emailRedirectTo: getAuthCallbackUrl(next),
       },
     })
     if (error) {
@@ -98,7 +111,7 @@ function LoginContent() {
   const handleGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
+      options: { redirectTo: getAuthCallbackUrl(next) },
     })
   }
 

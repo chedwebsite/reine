@@ -31,6 +31,34 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
 
 ---
 
+## 1.5 Authentication email links (IMPORTANT)
+
+Supabase builds the **"Confirm your email address"** link from this dashboard
+setting, and it only redirects back to URLs you explicitly allow:
+
+1. Open the **Supabase Dashboard → Authentication → URL Configuration**.
+2. **Site URL** (no trailing slash):
+   - Production: `https://reine-mocha.vercel.app`
+   - Leave the default `http://localhost:3000` *only* if you want local-dev-only links.
+3. **Redirect URLs** — add **both**:
+   - `https://reine-mocha.vercel.app/auth/callback`
+   - `https://reine-mocha.vercel.app/**` (wildcard for any other callback paths)
+4. Click **Save**.
+
+Why: the app (see `app/login/page.tsx`) now always asks Supabase to redirect
+confirmation / password‑reset / OAuth links to `NEXT_PUBLIC_SITE_URL` +
+`/auth/callback` (set in `.env.local`, and on Vercel as an env var). But if the
+redirect URL is **not** in the dashboard's allow‑list, Supabase silently ignores
+it and falls back to the dashboard **Site URL** — which defaults to
+`http://localhost:3000` on new projects. That is what causes the confirmation
+email to go to `localhost` instead of the project URL.
+
+> After changing these settings, use the **Resend verification email** button
+> on the login page (or sign up again with a fresh address) — already-sent links
+> keep the old redirect target.
+
+---
+
 ## 2. One-time database setup (run in SQL Editor)
 
 Open your project in the Supabase dashboard → **SQL Editor** → **New query**,
