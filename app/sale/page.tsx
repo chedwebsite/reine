@@ -7,6 +7,7 @@ import { supabase, type Product } from '@/lib/supabase'
 import { useAuth } from '@/components/auth-provider'
 import Reveal from '@/components/reveal'
 import ProductImage from '@/components/product-image'
+import { isOnSale, effectivePrice, discountPercent } from '@/lib/pricing'
 
 export default function SalePage() {
   const { user } = useAuth()
@@ -18,10 +19,9 @@ export default function SalePage() {
   useEffect(() => {
     supabase.from('products').select('*').order('price')
       .then(({ data }) => {
-        // Show bottom 40% by price as "on sale"
+        // Products marked as on sale (explicit sale_price) in the database
         if (data && data.length > 0) {
-          const sorted = [...data].sort((a, b) => a.price - b.price)
-          setProducts(sorted.slice(0, Math.ceil(sorted.length * 0.4)))
+          setProducts(data.filter(isOnSale))
         }
         setLoading(false)
       })
@@ -43,9 +43,12 @@ export default function SalePage() {
       const saved = localStorage.getItem('cart')
       const cart = saved ? JSON.parse(saved) : []
       const existing = cart.find((i: any) => i.id === product.id)
+      const discounted = effectivePrice(product)
       const updated = existing
-        ? cart.map((i: any) => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i)
-        : [...cart, { ...product, quantity: 1 }]
+        ? cart.map((i: any) => i.id === product.id
+            ? { ...i, quantity: i.quantity + 1, price: Math.min(i.price, discounted) }
+            : i)
+        : [...cart, { ...product, price: discounted, quantity: 1 }]
       localStorage.setItem('cart', JSON.stringify(updated))
       if (user) fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: updated }) })
       showToast('Added to cart')
@@ -68,8 +71,6 @@ export default function SalePage() {
     setFavorites(next)
   }, [favorites, user])
 
-  const salePrice = (price: number) => Math.round(price * 0.75)
-
   return (
     <main className="min-h-screen bg-background">
 
@@ -84,7 +85,7 @@ export default function SalePage() {
           <p className="text-accent text-sm font-semibold tracking-widest mb-4">LIMITED TIME</p>
           <h1 className="text-5xl font-display font-bold text-foreground mb-4">Sale</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Exclusive discounts on selected luxury pieces. Up to 25% off.
+            Exclusive discounts on selected luxury pieces.
           </p>
         </Reveal>
 
@@ -111,7 +112,7 @@ export default function SalePage() {
             <Reveal key={product.id} delay={(i % 4) * 90} className="group border border-border rounded-sm overflow-hidden hover:border-accent transition">
               <Link href={`/products/${product.id}`} className="block relative h-72 overflow-hidden bg-secondary">
                 <ProductImage product={product} className="absolute inset-0" />
-                <span className="absolute top-4 left-4 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-sm">25% OFF</span>
+                <span className="absolute top-4 left-4 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-sm">{discountPercent(product)}% OFF</span>
                 <button
                   onClick={e => { e.preventDefault(); toggleFavorite(product) }}
                   className={`absolute top-4 right-4 bg-background/80 backdrop-blur-sm p-2 rounded-sm transition ${favorites.has(product.id) ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
@@ -124,7 +125,7 @@ export default function SalePage() {
                 <h3 className="text-lg font-display font-semibold text-foreground">{product.name}</h3>
                 <div className="flex items-center justify-between pt-2 border-t border-border">
                   <div>
-                    <p className="text-lg font-display font-bold text-accent">₦{salePrice(product.price).toLocaleString()}</p>
+                    <p className="text-lg font-display font-bold text-accent">₦{effectivePrice(product).toLocaleString()}</p>
                     <p className="text-xs text-muted-foreground line-through">₦{product.price.toLocaleString()}</p>
                   </div>
                   <button

@@ -8,6 +8,7 @@ import { supabase, type Product } from '@/lib/supabase'
 import { useAuth } from '@/components/auth-provider'
 import Reveal from '@/components/reveal'
 import ProductImage from '@/components/product-image'
+import { isOnSale, effectivePrice } from '@/lib/pricing'
 
 export default function CollectionsPage() {
   return (
@@ -81,8 +82,10 @@ function CollectionsContent() {
     }
     const existing = cart.find(i => i.id === product.id)
     const updated = existing
-      ? cart.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i)
-      : [...cart, { ...product, quantity: 1 }]
+      ? cart.map(i => i.id === product.id
+          ? { ...i, quantity: i.quantity + 1, price: Math.min(i.price, effectivePrice(product)) }
+          : i)
+      : [...cart, { ...product, price: effectivePrice(product), quantity: 1 }]
     saveCart(updated)
     showToast('Added to cart')
   }
@@ -182,6 +185,9 @@ function CollectionsContent() {
               {/* Image */}
               <Link href={`/products/${product.id}`} className="block relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
                 <ProductImage product={product} className="absolute inset-0" />
+                {isOnSale(product) && (
+                  <span className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-semibold px-2 py-0.5 tracking-wider">SALE</span>
+                )}
                 {/* Out of stock */}
                 {product.in_stock === false && (
                   <div className="absolute inset-0 bg-[#080808bb] flex items-center justify-center">
@@ -219,7 +225,12 @@ function CollectionsContent() {
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-[#1c1c1c]">
-                  <p className="font-display font-light text-xl text-gold-gradient">₦{product.price.toLocaleString()}</p>
+                  <div className="flex flex-col">
+                    <p className="font-display font-light text-xl text-gold-gradient">₦{effectivePrice(product).toLocaleString()}</p>
+                    {isOnSale(product) && (
+                      <p className="text-xs text-muted-foreground line-through">₦{product.price.toLocaleString()}</p>
+                    )}
+                  </div>
                   <button
                     onClick={() => addToCart(product)}
                     disabled={product.in_stock === false}

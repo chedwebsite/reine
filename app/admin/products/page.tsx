@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import type { Product } from '@/lib/supabase'
+import { isOnSale, effectivePrice } from '@/lib/pricing'
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -80,7 +81,17 @@ export default function AdminProductsPage() {
                       <span className="text-xs text-muted-foreground/50">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-foreground">₦{p.price.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-foreground">
+                    {isOnSale(p) ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-accent font-medium">₦{effectivePrice(p).toLocaleString()}</span>
+                        <span className="text-xs text-muted-foreground line-through">₦{p.price.toLocaleString()}</span>
+                        <span className="px-1.5 py-0.5 rounded-sm bg-red-900/40 text-red-400 text-[10px] font-semibold">SALE</span>
+                      </div>
+                    ) : (
+                      <span>₦{p.price.toLocaleString()}</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <button
                       onClick={() => toggleStock(p)}

@@ -8,6 +8,7 @@ import { supabase, type Product } from '@/lib/supabase'
 import { useAuth } from '@/components/auth-provider'
 import Reveal from '@/components/reveal'
 import ProductImage from '@/components/product-image'
+import { isOnSale, effectivePrice } from '@/lib/pricing'
 
 export default function SearchPage() {
   return (
@@ -63,8 +64,10 @@ function SearchContent() {
       const cart = saved ? JSON.parse(saved) : []
       const existing = cart.find((i: any) => i.id === product.id)
       const updated = existing
-        ? cart.map((i: any) => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i)
-        : [...cart, { ...product, quantity: 1 }]
+        ? cart.map((i: any) => i.id === product.id
+            ? { ...i, quantity: i.quantity + 1, price: Math.min(i.price, effectivePrice(product)) }
+            : i)
+        : [...cart, { ...product, price: effectivePrice(product), quantity: 1 }]
       localStorage.setItem('cart', JSON.stringify(updated))
       if (user) fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: updated }) })
       showToast('Added to cart')
@@ -169,6 +172,9 @@ function SearchContent() {
               <Reveal key={product.id} delay={(i % 4) * 90} className="group border border-border rounded-sm overflow-hidden hover:border-accent transition">
                 <Link href={`/products/${product.id}`} className="block relative h-72 overflow-hidden bg-secondary">
                   <ProductImage product={product} className="absolute inset-0" />
+                  {isOnSale(product) && (
+                    <span className="absolute top-4 left-4 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-sm">SALE</span>
+                  )}
                   {product.in_stock === false && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                       <span className="text-white text-xs font-semibold tracking-widest border border-white/50 px-3 py-1">OUT OF STOCK</span>
@@ -185,7 +191,12 @@ function SearchContent() {
                   <p className="text-xs text-muted-foreground font-semibold tracking-widest">{product.category}</p>
                   <h3 className="text-lg font-display font-semibold text-foreground">{product.name}</h3>
                   <div className="flex items-center justify-between pt-2 border-t border-border">
-                    <p className="text-lg font-display font-bold text-accent">₦{product.price.toLocaleString()}</p>
+                    <div>
+                      <p className="text-lg font-display font-bold text-accent">₦{effectivePrice(product).toLocaleString()}</p>
+                      {isOnSale(product) && (
+                        <p className="text-xs text-muted-foreground line-through">₦{product.price.toLocaleString()}</p>
+                      )}
+                    </div>
                     <button
                       onClick={() => addToCart(product)}
                       disabled={product.in_stock === false}

@@ -9,7 +9,7 @@ import { uploadProductImage } from '@/lib/upload-image'
 const CATEGORIES = ['Haute Couture', 'Accessories', 'Jewelry']
 
 const empty = {
-  name: '', category: 'Haute Couture', price: '', image: '',
+  name: '', category: 'Haute Couture', price: '', sale_price: '', image: '',
   description: '', rating: '5', reviews: '0', in_stock: true, sizes: '',
   colors: '', main_image_colors: '', imagesLines: '',
 }
@@ -29,7 +29,7 @@ export default function ProductFormPage() {
         .then(r => r.json())
         .then(p => setForm({
           ...p,
-          price: String(p.price), rating: String(p.rating), reviews: String(p.reviews),
+          price: String(p.price), sale_price: p.sale_price != null ? String(p.sale_price) : '', rating: String(p.rating), reviews: String(p.reviews),
           sizes: Array.isArray(p.sizes) ? p.sizes.join(', ') : '',
           colors: Array.isArray(p.colors) ? p.colors.join(', ') : '',
           main_image_colors: Array.isArray(p.main_image_colors) ? p.main_image_colors.join(', ') : '',
@@ -69,6 +69,7 @@ export default function ProductFormPage() {
     const body = {
       ...form,
       price: Number(form.price),
+      sale_price: form.sale_price === '' ? null : Number(form.sale_price),
       rating: Number(form.rating),
       reviews: Number(form.reviews),
       sizes: form.sizes ? form.sizes.split(',').map((s: string) => s.trim().toUpperCase()).filter(Boolean) : [],
@@ -130,6 +131,14 @@ export default function ProductFormPage() {
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground font-body">Price (₦)</label>
             <input required type="number" min="0" className={field} value={form.price} onChange={e => set('price', e.target.value)} />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground font-body">
+              Sale Price (₦) <span className="text-muted-foreground/60">(optional — leave blank for not on sale)</span>
+            </label>
+            <input type="number" min="0" className={field} value={form.sale_price} onChange={e => set('sale_price', e.target.value)} placeholder="e.g. 63750" />
+            <p className="text-[11px] text-muted-foreground/60">Must be lower than the regular price. Sale items appear on the /sale page and are sold at this price everywhere.</p>
           </div>
 
           <div className="col-span-2 space-y-1">

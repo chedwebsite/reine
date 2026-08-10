@@ -15,6 +15,8 @@ export interface Product {
   name: string
   category: string
   price: number
+  /** Optional explicit sale price (must be lower than `price`). When set, this is the price charged everywhere. */
+  sale_price?: number | null
   image: string
   rating: number
   reviews: number

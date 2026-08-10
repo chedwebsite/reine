@@ -139,3 +139,10 @@ null
   true,
 null
 );
+-- Mark the cheapest ~40% of the seeded products as "on sale" (25% off)
+-- so the Sale page has items on a fresh database.
+update products
+set sale_price = round(price * 0.75)
+where name in (
+  'Cashmere Scarf', 'Silk Clutch Bag', 'Designer Heels', 'Luxury Handbag', 'Tailored Blazer'
+);

@@ -60,6 +60,7 @@ export const adminProductSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200),
   category: z.string().min(1, 'Category is required'),
   price: z.number().nonnegative('Price must be non-negative'),
+  sale_price: z.number().min(0, 'Sale price must be non-negative').nullable().optional(),
   image: z.string().url('Invalid image URL'),
   description: z.string().optional(),
   rating: z.number().min(0).max(5).optional(),
@@ -74,7 +75,10 @@ export const adminProductSchema = z.object({
       colors: z.array(z.string()).optional(),
     })
   ).optional(),
-})
+}).refine(
+  (data) => data.sale_price == null || data.sale_price < data.price,
+  { message: 'Sale price must be lower than the regular price', path: ['sale_price'] }
+)
 
 // ─── Cart / Favorites ────────────────────────────────────────────
 export const cartUpdateSchema = z.object({

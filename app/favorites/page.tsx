@@ -6,6 +6,7 @@ import { Heart, ShoppingCart, Trash2 } from 'lucide-react'
 import { supabase, type Product } from '@/lib/supabase'
 import { useAuth } from '@/components/auth-provider'
 import { useRouter } from 'next/navigation'
+import { isOnSale, effectivePrice } from '@/lib/pricing'
 
 export default function FavoritesPage() {
   const { user } = useAuth()
@@ -46,8 +47,10 @@ export default function FavoritesPage() {
     const cart = saved ? JSON.parse(saved) : []
     const existing = cart.find((i: any) => i.id === product.id)
     const updated = existing
-      ? cart.map((i: any) => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i)
-      : [...cart, { ...product, quantity: 1 }]
+      ? cart.map((i: any) => i.id === product.id
+          ? { ...i, quantity: i.quantity + 1, price: Math.min(i.price, effectivePrice(product)) }
+          : i)
+      : [...cart, { ...product, price: effectivePrice(product), quantity: 1 }]
     localStorage.setItem('cart', JSON.stringify(updated))
     if (user) fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: updated }) })
     showToast('Added to cart')
@@ -94,6 +97,9 @@ export default function FavoritesPage() {
               <div key={product.id} className="group border border-border rounded-sm overflow-hidden hover:border-accent transition">
                 <div className="relative h-72 overflow-hidden bg-secondary">
                   <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                  {isOnSale(product) && (
+                    <span className="absolute top-4 left-4 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-sm">SALE</span>
+                  )}
                   <button
                     onClick={() => removeFavorite(product.id)}
                     className="absolute top-4 right-4 bg-background/80 backdrop-blur-sm p-2 rounded-sm transition text-red-400 hover:text-red-300"
@@ -105,7 +111,12 @@ export default function FavoritesPage() {
                   <p className="text-xs text-muted-foreground font-semibold tracking-widest">{product.category}</p>
                   <h3 className="text-lg font-display font-semibold text-foreground">{product.name}</h3>
                   <div className="flex items-center justify-between pt-2 border-t border-border">
-                    <p className="text-lg font-display font-bold text-accent">₦{product.price.toLocaleString()}</p>
+                    <div>
+                      <p className="text-lg font-display font-bold text-accent">₦{effectivePrice(product).toLocaleString()}</p>
+                      {isOnSale(product) && (
+                        <p className="text-xs text-muted-foreground line-through">₦{product.price.toLocaleString()}</p>
+                      )}
+                    </div>
                     <button
                       onClick={() => addToCart(product)}
                       className="p-2 bg-accent text-[#0a0a0a] rounded-sm hover:bg-accent/90 transition"

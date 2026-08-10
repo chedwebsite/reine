@@ -7,6 +7,7 @@ import { ShoppingCart, Heart, ArrowLeft, Star } from 'lucide-react'
 import { supabase, type Product } from '@/lib/supabase'
 import { useAuth } from '@/components/auth-provider'
 import Reveal from '@/components/reveal'
+import { isOnSale, effectivePrice, discountPercent } from '@/lib/pricing'
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -49,8 +50,10 @@ export default function ProductDetailPage() {
       const key = `${product.id}:${selectedSize || 'default'}:${selectedColor || 'default'}`
       const existing = cart.find((i: any) => `${i.id}:${i.size || 'default'}:${i.color || 'default'}` === key)
       const updated = existing
-        ? cart.map((i: any) => `${i.id}:${i.size || 'default'}:${i.color || 'default'}` === key ? { ...i, quantity: i.quantity + quantity } : i)
-        : [...cart, { ...product, quantity, size: selectedSize || undefined, color: selectedColor || undefined, image: activeImage || product.image }]
+        ? cart.map((i: any) => `${i.id}:${i.size || 'default'}:${i.color || 'default'}` === key
+            ? { ...i, quantity: i.quantity + quantity, price: Math.min(i.price, effectivePrice(product)) }
+            : i)
+        : [...cart, { ...product, price: effectivePrice(product), quantity, size: selectedSize || undefined, color: selectedColor || undefined, image: activeImage || product.image }]
       localStorage.setItem('cart', JSON.stringify(updated))
       if (user) fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: updated }) })
       showToast('Added to cart')
@@ -141,7 +144,7 @@ export default function ProductDetailPage() {
     category: product.category,
     offers: {
       '@type': 'Offer',
-      price: product.price,
+      price: effectivePrice(product),
       priceCurrency: 'NGN',
       availability: product.in_stock === false ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
     },
@@ -229,7 +232,17 @@ export default function ProductDetailPage() {
                 </div>
                 <span className="text-sm text-muted-foreground">{product.reviews} reviews</span>
               </div>
-              <p className="text-3xl font-display font-bold text-accent">₦{product.price.toLocaleString()}</p>
+              <div className="flex items-end gap-3">
+                <p className="text-3xl font-display font-bold text-accent">₦{effectivePrice(product).toLocaleString()}</p>
+                {isOnSale(product) && (
+                  <p className="text-lg text-muted-foreground line-through mb-1">₦{product.price.toLocaleString()}</p>
+                )}
+              </div>
+              {isOnSale(product) && (
+                <span className="inline-block mt-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-sm">
+                  {discountPercent(product)}% OFF
+                </span>
+              )}
             </div>
 
             {product.description && (
