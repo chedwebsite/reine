@@ -337,3 +337,48 @@
     -webkit-backdrop-filter: blur(16px) saturate(1.4);
   }
 }
+
+/* ─── Scroll-reveal & motion layer ───────────────────────── */
+@keyframes ken-burns {
+  from { transform: scale(1.12); }
+  to   { transform: scale(1); }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@layer utilities {
+  /* Scroll-reveal wrapper — duration/delay set inline by <Reveal /> */
+  .reveal {
+    transition-property: opacity, transform;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+
+  /* Ken Burns slow zoom for hero imagery */
+  .animate-ken-burns {
+    animation: ken-burns 7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  /* Brand marquee ticker */
+  .marquee-track {
+    animation: marquee 32s linear infinite;
+  }
+  .marquee-track:hover {
+    animation-play-state: paused;
+  }
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-ken-burns,
+  .marquee-track {
+    animation: none !important;
+  }
+  .reveal {
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+  }
+}

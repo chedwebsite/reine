@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { ShoppingCart, Heart } from 'lucide-react'
 import { supabase, type Product } from '@/lib/supabase'
 import { useAuth } from '@/components/auth-provider'
+import Reveal from '@/components/reveal'
+import ProductImage from '@/components/product-image'
 
 export default function SalePage() {
   const { user } = useAuth()
@@ -78,13 +80,13 @@ export default function SalePage() {
       )}
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-        <div className="mb-12 text-center">
+        <Reveal variant="fade-in" className="mb-12 text-center">
           <p className="text-accent text-sm font-semibold tracking-widest mb-4">LIMITED TIME</p>
           <h1 className="text-5xl font-display font-bold text-foreground mb-4">Sale</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Exclusive discounts on selected luxury pieces. Up to 25% off.
           </p>
-        </div>
+        </Reveal>
 
         {loading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -105,10 +107,10 @@ export default function SalePage() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {!loading && products.map(product => (
-            <div key={product.id} className="group border border-border rounded-sm overflow-hidden hover:border-accent transition">
+          {!loading && products.map((product, i) => (
+            <Reveal key={product.id} delay={(i % 4) * 90} className="group border border-border rounded-sm overflow-hidden hover:border-accent transition">
               <Link href={`/products/${product.id}`} className="block relative h-72 overflow-hidden bg-secondary">
-                <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                <ProductImage product={product} className="absolute inset-0" />
                 <span className="absolute top-4 left-4 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-sm">25% OFF</span>
                 <button
                   onClick={e => { e.preventDefault(); toggleFavorite(product) }}
@@ -134,7 +136,7 @@ export default function SalePage() {
                   </button>
                 </div>
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>

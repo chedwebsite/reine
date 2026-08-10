@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { ChevronRight, ArrowRight } from 'lucide-react'
 import HeroSlideshow from '@/components/hero-slideshow'
+import Reveal from '@/components/reveal'
+import Marquee from '@/components/marquee'
 
 const collections = [
   {
@@ -93,14 +95,15 @@ export default function HomePage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 border-b border-[#1c1c1c]">
         <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-3 gap-px bg-[#1c1c1c]">
           {pillars.map(({ label, desc }, i) => (
-            <div
+            <Reveal
               key={label}
-              className={`bg-background px-10 py-12 text-center animate-fade-up opacity-0 delay-${(i + 1) * 100}`}
+              delay={(i + 1) * 120}
+              className="bg-background px-10 py-12 text-center"
             >
               <div className="w-8 h-px bg-gradient-to-r from-transparent via-[#c9a84c] to-transparent mx-auto mb-6" />
               <h3 className="font-display font-light text-xl text-foreground mb-3 tracking-wide">{label}</h3>
               <p className="text-sm font-body font-light text-[#8a8478] leading-relaxed">{desc}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -108,7 +111,7 @@ export default function HomePage() {
       {/* ── Featured Collections ──────────────────────────── */}
       <section className="py-28 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-20 text-center animate-fade-up opacity-0">
+          <Reveal className="mb-20 text-center">
             <p className="label-luxury mb-5">Featured</p>
             <h2 className="font-display font-light text-foreground mb-5"
               style={{ fontSize: 'clamp(2.2rem, 5vw, 4rem)', letterSpacing: '0.02em' }}
@@ -116,14 +119,14 @@ export default function HomePage() {
               Iconic Collections
             </h2>
             <div className="w-12 h-px bg-gradient-to-r from-transparent via-[#c9a84c] to-transparent mx-auto" />
-          </div>
+          </Reveal>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {collections.map((col, i) => (
+              <Reveal key={col.id} delay={(i + 1) * 120}>
               <Link
-                key={col.id}
                 href={col.href}
-                className={`group relative overflow-hidden block animate-fade-up opacity-0 delay-${(i + 1) * 150}`}
+                className="group relative overflow-hidden block"
                 style={{ aspectRatio: '3/4' }}
               >
                 <img
@@ -145,10 +148,14 @@ export default function HomePage() {
                   </span>
                 </div>
               </Link>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
+
+      {/* ── Brand marquee ────────────────────────────────── */}
+      <Marquee />
 
       {/* ── CTA / Newsletter ─────────────────────────────── */}
       <section className="relative py-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -158,17 +165,17 @@ export default function HomePage() {
         {/* Glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-[#c9a84c06] blur-3xl pointer-events-none rounded-full" />
 
-        <div className="relative z-10 mx-auto max-w-2xl text-center">
-          <p className="label-luxury mb-6 animate-fade-up opacity-0">Exclusive Access</p>
-          <h2 className="font-display font-light text-foreground mb-4 animate-fade-up opacity-0 delay-100"
+        <Reveal className="relative z-10 mx-auto max-w-2xl text-center">
+          <p className="label-luxury mb-6">Exclusive Access</p>
+          <h2 className="font-display font-light text-foreground mb-4"
             style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', letterSpacing: '0.02em' }}
           >
             Join the Inner Circle
           </h2>
-          <p className="text-[#8a8478] font-body font-light mb-10 leading-relaxed animate-fade-up opacity-0 delay-200">
+          <p className="text-[#8a8478] font-body font-light mb-10 leading-relaxed">
             Be first to discover new collections, private events, and members-only offers.
           </p>
-          <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto animate-fade-up opacity-0 delay-300">
+          <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
             <input
               type="email"
               placeholder="Your email address"
@@ -181,7 +188,7 @@ export default function HomePage() {
               Subscribe
             </button>
           </form>
-        </div>
+        </Reveal>
       </section>
 
     </main>

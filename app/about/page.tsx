@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import Reveal from '@/components/reveal'
 
 export const metadata: Metadata = {
   title: 'About Us | Reine Luxe Co.',
@@ -47,7 +48,7 @@ export default function AboutPage() {
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-24 space-y-24">
 
         {/* About text */}
-        <section className="animate-fade-up opacity-0">
+        <Reveal>
           <p className="label-luxury mb-6">About</p>
           <div className="space-y-5 text-[#8a8478] font-body font-light text-base leading-[1.9]">
             <p>
@@ -57,24 +58,24 @@ export default function AboutPage() {
               Every piece in our collection has been handpicked by our team of experts, with meticulous attention to craftsmanship, quality, and timeless design. We believe luxury is a privilege earned through dedication to perfection.
             </p>
           </div>
-        </section>
+        </Reveal>
 
         {/* Values */}
-        <section className="animate-fade-up opacity-0">
+        <Reveal>
           <p className="label-luxury mb-10">Our Values</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#1c1c1c]">
             {values.map(({ label, desc }, i) => (
-              <div key={label} className={`bg-background p-10 animate-fade-up opacity-0 delay-${(i + 1) * 100}`}>
+              <Reveal key={label} delay={(i + 1) * 120} className="bg-background p-10">
                 <div className="w-6 h-px bg-[#c9a84c] mb-6" />
                 <h3 className="font-display font-light text-xl text-foreground mb-3 tracking-wide">{label}</h3>
                 <p className="text-sm font-body font-light text-[#8a8478] leading-relaxed">{desc}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
-        </section>
+        </Reveal>
 
         {/* Commitment */}
-        <section className="animate-fade-up opacity-0">
+        <Reveal>
           <div className="border border-[#1c1c1c] bg-[#0d0d0d] p-10 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-48 h-48 bg-[#c9a84c04] blur-3xl pointer-events-none" />
             <p className="label-luxury mb-6">Our Commitment</p>
@@ -90,10 +91,10 @@ export default function AboutPage() {
               ))}
             </ul>
           </div>
-        </section>
+        </Reveal>
 
         {/* CTA */}
-        <section className="text-center pt-8 border-t border-[#1c1c1c] animate-fade-up opacity-0">
+        <Reveal className="text-center pt-8 border-t border-[#1c1c1c]">
           <h2 className="font-display font-light text-3xl text-foreground mb-4 tracking-wide">Experience the Difference</h2>
           <p className="text-[#8a8478] font-body font-light mb-10">
             Discover our curated collections and find pieces that resonate with your unique style.
@@ -104,7 +105,7 @@ export default function AboutPage() {
           >
             Explore Collections
           </Link>
-        </section>
+        </Reveal>
       </div>
 
     </main>

@@ -6,6 +6,8 @@ import { useState, useEffect, useCallback, Suspense, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase, type Product } from '@/lib/supabase'
 import { useAuth } from '@/components/auth-provider'
+import Reveal from '@/components/reveal'
+import ProductImage from '@/components/product-image'
 
 export default function CollectionsPage() {
   return (
@@ -118,20 +120,20 @@ function CollectionsContent() {
       )}
 
       {/* Page header */}
-      <div className="relative border-b border-[#1c1c1c] py-20 px-4 text-center overflow-hidden">
+      <Reveal variant="fade-in" className="relative border-b border-[#1c1c1c] py-20 px-4 text-center overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-24 bg-[#c9a84c06] blur-3xl pointer-events-none" />
-        <p className="label-luxury mb-4 animate-fade-up opacity-0">Shop</p>
-        <h1 className="font-display font-light text-foreground animate-fade-up opacity-0 delay-100"
+        <p className="label-luxury mb-4">Shop</p>
+        <h1 className="font-display font-light text-foreground"
           style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)', letterSpacing: '0.02em' }}
         >
           Our Collections
         </h1>
-        <div className="w-12 h-px bg-gradient-to-r from-transparent via-[#c9a84c] to-transparent mx-auto mt-6 animate-fade-up opacity-0 delay-200" />
-      </div>
+        <div className="w-12 h-px bg-gradient-to-r from-transparent via-[#c9a84c] to-transparent mx-auto mt-6" />
+      </Reveal>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         {/* Category filter */}
-        <div className="flex flex-wrap gap-3 justify-center mb-16 animate-fade-up opacity-0 delay-200">
+        <Reveal delay={150} className="flex flex-wrap gap-3 justify-center mb-16">
           {[{ key: null, label: 'All' }, ...categories.map(c => ({ key: c, label: c }))].map(({ key, label }) => (
             <button
               key={label}
@@ -145,7 +147,7 @@ function CollectionsContent() {
               {label}
             </button>
           ))}
-        </div>
+        </Reveal>
 
         {/* Loading skeletons */}
         {loading && (
@@ -172,17 +174,14 @@ function CollectionsContent() {
         {/* Product grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {!loading && filtered.map((product, i) => (
-            <div
+            <Reveal
               key={product.id}
-              className={`group border border-[#1c1c1c] bg-[#0d0d0d] overflow-hidden card-morph animate-fade-up opacity-0 delay-${Math.min((i % 4 + 1) * 100, 400)}`}
+              delay={(i % 4) * 90}
+              className="group border border-[#1c1c1c] bg-[#0d0d0d] overflow-hidden card-morph"
             >
               {/* Image */}
               <Link href={`/products/${product.id}`} className="block relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110"
-                />
+                <ProductImage product={product} className="absolute inset-0" />
                 {/* Out of stock */}
                 {product.in_stock === false && (
                   <div className="absolute inset-0 bg-[#080808bb] flex items-center justify-center">
@@ -231,7 +230,7 @@ function CollectionsContent() {
                   </button>
                 </div>
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>

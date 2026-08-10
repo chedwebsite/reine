@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { ShoppingCart, Heart, Search } from 'lucide-react'
 import { supabase, type Product } from '@/lib/supabase'
 import { useAuth } from '@/components/auth-provider'
+import Reveal from '@/components/reveal'
+import ProductImage from '@/components/product-image'
 
 export default function SearchPage() {
   return (
@@ -123,12 +125,12 @@ function SearchContent() {
 
         {/* Heading */}
         {query && (
-          <div className="mb-8">
+          <Reveal variant="fade-in" className="mb-8">
             <p className="text-muted-foreground text-sm">
               {loading ? 'Searching…' : `${results.length} result${results.length !== 1 ? 's' : ''} for `}
               {!loading && <span className="text-foreground font-semibold">"{query}"</span>}
             </p>
-          </div>
+          </Reveal>
         )}
 
         {!query && (
@@ -163,10 +165,10 @@ function SearchContent() {
         {/* Results grid */}
         {!loading && results.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {results.map(product => (
-              <div key={product.id} className="group border border-border rounded-sm overflow-hidden hover:border-accent transition">
+            {results.map((product, i) => (
+              <Reveal key={product.id} delay={(i % 4) * 90} className="group border border-border rounded-sm overflow-hidden hover:border-accent transition">
                 <Link href={`/products/${product.id}`} className="block relative h-72 overflow-hidden bg-secondary">
-                  <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                  <ProductImage product={product} className="absolute inset-0" />
                   {product.in_stock === false && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                       <span className="text-white text-xs font-semibold tracking-widest border border-white/50 px-3 py-1">OUT OF STOCK</span>
@@ -193,7 +195,7 @@ function SearchContent() {
                     </button>
                   </div>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         )}

@@ -49,7 +49,7 @@ export default function HeroSlideshow() {
           key={index}
           className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-[800ms] ease-in-out ${
             index === currentIndex
-              ? 'opacity-100 scale-100'
+              ? 'opacity-100 animate-ken-burns'
               : 'opacity-0 scale-105'
           }`}
           style={{

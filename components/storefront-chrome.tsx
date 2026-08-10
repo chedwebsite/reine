@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import Navbar from '@/components/navbar'
 import Footer from '@/components/footer'
+import AnnouncementBar from '@/components/announcement-bar'
 
 /**
  * Renders the storefront Navbar and Footer around page content.
@@ -16,6 +17,7 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
 
   return (
     <>
+      {!isAdmin && <AnnouncementBar />}
       {!isAdmin && <Navbar />}
       {children}
       {!isAdmin && <Footer />}

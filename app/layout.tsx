@@ -72,6 +72,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${cormorant.variable} ${jost.variable} bg-background`}>
       <body className="antialiased font-body text-foreground">
+        {/* Keep scroll-reveal content visible if JavaScript is disabled */}
+        <noscript>
+          <style>{`.reveal{opacity:1!important;transform:none!important}`}</style>
+        </noscript>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}

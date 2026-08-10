@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ShoppingCart, Heart, ArrowLeft, Star } from 'lucide-react'
 import { supabase, type Product } from '@/lib/supabase'
 import { useAuth } from '@/components/auth-provider'
+import Reveal from '@/components/reveal'
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -172,7 +173,7 @@ export default function ProductDetailPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           {/* Image */}
-          <div>
+          <Reveal variant="fade-in" delay={100}>
             <div className="relative h-[500px] overflow-hidden rounded-sm bg-secondary mb-4">
               <img
                 src={activeImage || product.image}
@@ -213,10 +214,10 @@ export default function ProductDetailPage() {
                 })}
               </div>
             )}
-          </div>
+          </Reveal>
 
           {/* Details */}
-          <div className="flex flex-col gap-6">
+          <Reveal className="flex flex-col gap-6">
             <div>
               <p className="text-accent text-xs font-semibold tracking-widest mb-2">{product.category}</p>
               <h1 className="text-4xl font-display font-bold text-foreground mb-4">{product.name}</h1>
@@ -325,7 +326,7 @@ export default function ProductDetailPage() {
               <p>✓ 30-day hassle-free returns</p>
               <p>✓ Authenticity guaranteed</p>
             </div>
-          </div>
+          </Reveal>
         </div>
       </div>
     </main>
