@@ -80,15 +80,15 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         {!isCancelled ? (
           <div className="border border-border rounded-sm md:p-8 p-3 bg-secondary/30 mb-8">
             <h2 className="text-lg font-display font-semibold text-foreground mb-6">Order Tracking</h2>
-            <div className="flex items-center">
+            <div className="grid grid-cols-2 gap-y-6 md:flex md:items-center">
               {STATUS_FLOW.map((step, index) => {
                 const meta = STATUS_META[step]
                 const isReached = index <= currentStep
                 const isCurrent = index === currentStep
                 return (
                   <div key={step} className="flex items-center flex-1 last:flex-none">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className={`w-6 h-6 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 transition ${isReached
+                    <div className="flex flex-col items-center gap-2 w-full">
+                      <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 transition ${isReached
                           ? 'border-accent bg-accent/10 text-accent'
                           : 'border-border text-muted-foreground/40'
                         } ${isCurrent ? 'ring-4 ring-accent/20' : ''}`}>
@@ -100,7 +100,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                       </span>
                     </div>
                     {index < STATUS_FLOW.length - 1 && (
-                      <div className={`flex-1 h-0.5 mx-2 mb-6 transition ${index < currentStep ? 'bg-accent' : 'bg-border'
+                      <div className={`hidden md:block flex-1 h-0.5 mx-2 mb-6 transition ${index < currentStep ? 'bg-accent' : 'bg-border'
                         }`} />
                     )}
                   </div>
