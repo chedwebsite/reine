@@ -62,8 +62,8 @@ export default async function OrdersPage({
     <main className="min-h-screen bg-background">
       <Navbar />
 
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16">
-        <h1 className="text-3xl font-display font-bold text-foreground mb-8">My Orders</h1>
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-display font-bold text-foreground mb-4">My Orders</h1>
 
         {!orders?.length ? (
           <div className="text-center py-24 space-y-4">

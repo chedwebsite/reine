@@ -54,7 +54,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     <main className="min-h-screen bg-background">
       <Navbar />
 
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-16">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8">
         <Link href="/orders" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-accent transition mb-8">
           <ChevronLeft size={16} /> Back to My Orders
         </Link>
@@ -78,7 +78,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
         {/* Tracking Timeline */}
         {!isCancelled ? (
-          <div className="border border-border rounded-sm p-8 bg-secondary/30 mb-8">
+          <div className="border border-border rounded-sm md:p-8 p-3 bg-secondary/30 mb-8">
             <h2 className="text-lg font-display font-semibold text-foreground mb-6">Order Tracking</h2>
             <div className="flex items-center">
               {STATUS_FLOW.map((step, index) => {
@@ -88,7 +88,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 return (
                   <div key={step} className="flex items-center flex-1 last:flex-none">
                     <div className="flex flex-col items-center gap-2">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition ${isReached
+                      <div className={`w-6 h-6 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 transition ${isReached
                           ? 'border-accent bg-accent/10 text-accent'
                           : 'border-border text-muted-foreground/40'
                         } ${isCurrent ? 'ring-4 ring-accent/20' : ''}`}>

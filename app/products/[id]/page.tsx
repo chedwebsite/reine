@@ -17,6 +17,7 @@ export default function ProductDetailPage() {
   const [isFav, setIsFav] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
+  const [selectedSize, setSelectedSize] = useState<string>('')
 
   useEffect(() => {
     supabase.from('products').select('*').eq('id', id).single()
@@ -36,18 +37,21 @@ export default function ProductDetailPage() {
   const addToCart = useCallback(() => {
     if (!user) { router.push('/login'); return }
     if (!product) return
+    const hasSizes = Array.isArray(product.sizes) && product.sizes.length > 0
+    if (hasSizes && !selectedSize) { showToast('Please select a size'); return }
     try {
       const saved = localStorage.getItem('cart')
       const cart = saved ? JSON.parse(saved) : []
-      const existing = cart.find((i: any) => i.id === product.id)
+      const key = `${product.id}:${selectedSize || 'default'}`
+      const existing = cart.find((i: any) => `${i.id}:${i.size || 'default'}` === key)
       const updated = existing
-        ? cart.map((i: any) => i.id === product.id ? { ...i, quantity: i.quantity + quantity } : i)
-        : [...cart, { ...product, quantity }]
+        ? cart.map((i: any) => `${i.id}:${i.size || 'default'}` === key ? { ...i, quantity: i.quantity + quantity } : i)
+        : [...cart, { ...product, quantity, size: selectedSize || undefined }]
       localStorage.setItem('cart', JSON.stringify(updated))
       if (user) fetch('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: updated }) })
       showToast('Added to cart')
     } catch {}
-  }, [product, quantity, user, router])
+  }, [product, quantity, selectedSize, user, router])
 
   const toggleFavorite = useCallback(async () => {
     if (!user) { router.push('/login'); return }
@@ -162,6 +166,32 @@ export default function ProductDetailPage() {
 
             {product.description && (
               <p className="text-muted-foreground font-body leading-relaxed">{product.description}</p>
+            )}
+
+            {/* Size Selection */}
+            {Array.isArray(product.sizes) && product.sizes.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-body text-foreground">Size</span>
+                  <span className="text-xs text-muted-foreground/70">Select your usual size for a tailored fit</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {product.sizes.map(s => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setSelectedSize(s)}
+                      className={`px-4 py-2 border rounded-sm text-sm font-body transition-all duration-200 ${
+                        selectedSize === s
+                          ? 'border-accent bg-accent/10 text-accent'
+                          : 'border-border text-muted-foreground hover:border-accent/50 hover:text-foreground'
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
 
             {/* Quantity */}

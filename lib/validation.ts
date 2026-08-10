@@ -13,6 +13,7 @@ export const paymentInitializeSchema = z.object({
       price: z.number(),
       quantity: z.number().int().positive(),
       image: z.string().optional(),
+      size: z.string().optional(),
     })
   ).optional().default([]),
   userId: z.string().uuid().nullable().optional(),
@@ -63,6 +64,7 @@ export const adminProductSchema = z.object({
   rating: z.number().min(0).max(5).optional(),
   reviews: z.number().int().nonnegative().optional(),
   in_stock: z.boolean().optional(),
+  sizes: z.array(z.string()).optional(),
 })
 
 // ─── Cart / Favorites ────────────────────────────────────────────
@@ -74,6 +76,7 @@ export const cartUpdateSchema = z.object({
       price: z.number(),
       quantity: z.number().int().positive(),
       image: z.string().optional(),
+      size: z.string().optional(),
     })
   ),
 })

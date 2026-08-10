@@ -13,6 +13,7 @@ interface CartItem {
   price: number
   quantity: number
   image: string
+  size?: string
 }
 
 interface PaymentError {
@@ -357,9 +358,9 @@ function CheckoutContent() {
 
               <div className="space-y-3 border-b border-border pb-4 max-h-64 overflow-y-auto">
                 {items.map((item) => (
-                  <div key={item.id} className="flex justify-between text-sm">
+                  <div key={`${item.id}:${item.size || 'default'}`} className="flex justify-between text-sm">
                     <span className="text-muted-foreground">
-                      {item.name} × {item.quantity}
+                      {item.name}{item.size ? ` (Size ${item.size})` : ''} × {item.quantity}
                     </span>
                     <span className="text-foreground">
                       ₦{(item.price * item.quantity).toLocaleString()}

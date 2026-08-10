@@ -89,6 +89,11 @@ export default function Navbar() {
 
   async function handleLogout() {
     await supabase.auth.signOut()
+    // Clear locally-persisted cart/favorites so the next guest/user
+    // doesn't see the previous session's cart count.
+    localStorage.removeItem('cart')
+    localStorage.removeItem('favorites')
+    setCartCount(0)
     router.push('/login')
     router.refresh()
   }

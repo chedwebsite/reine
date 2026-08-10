@@ -9,7 +9,7 @@ const CATEGORIES = ['Haute Couture', 'Accessories', 'Jewelry']
 
 const empty = {
   name: '', category: 'Haute Couture', price: '', image: '',
-  description: '', rating: '5', reviews: '0', in_stock: true,
+  description: '', rating: '5', reviews: '0', in_stock: true, sizes: '',
 }
 
 export default function ProductFormPage() {
@@ -24,7 +24,7 @@ export default function ProductFormPage() {
     if (!isNew) {
       fetch(`/api/admin/products/${params.id}`)
         .then(r => r.json())
-        .then(p => setForm({ ...p, price: String(p.price), rating: String(p.rating), reviews: String(p.reviews) }))
+        .then(p => setForm({ ...p, price: String(p.price), rating: String(p.rating), reviews: String(p.reviews), sizes: Array.isArray(p.sizes) ? p.sizes.join(', ') : '' }))
     }
   }, [params.id, isNew])
 
@@ -41,6 +41,7 @@ export default function ProductFormPage() {
       price: Number(form.price),
       rating: Number(form.rating),
       reviews: Number(form.reviews),
+      sizes: form.sizes ? form.sizes.split(',').map((s: string) => s.trim().toUpperCase()).filter(Boolean) : [],
     }
     const res = isNew
       ? await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
@@ -105,6 +106,13 @@ export default function ProductFormPage() {
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground font-body">Reviews count</label>
             <input type="number" min="0" className={field} value={form.reviews} onChange={e => set('reviews', e.target.value)} />
+          </div>
+
+          <div className="col-span-2 space-y-1">
+            <label className="text-xs text-muted-foreground font-body">
+              Available Sizes <span className="text-muted-foreground/60">(comma-separated, e.g. XS, S, M, L, XL — leave blank for items without sizes)</span>
+            </label>
+            <input className={field} value={form.sizes} onChange={e => set('sizes', e.target.value)} placeholder="XS, S, M, L, XL" />
           </div>
 
           <div className="col-span-2 flex items-center gap-3">

@@ -13,6 +13,7 @@ interface CartItem {
   price: number
   quantity: number
   image: string
+  size?: string
 }
 
 export default function CartPage() {
@@ -51,16 +52,19 @@ export default function CartPage() {
   }
 
   const updateQuantity = (id: string, quantity: number) => {
-    if (quantity <= 0) { saveCart(items.filter(i => i.id !== id)); return }
-    saveCart(items.map(i => i.id === id ? { ...i, quantity } : i))
+    if (quantity <= 0) { saveCart(items.filter(i => itemKey(i) !== id)); return }
+    saveCart(items.map(i => itemKey(i) === id ? { ...i, quantity } : i))
   }
 
-  const removeItem = (id: string) => saveCart(items.filter(i => i.id !== id))
+  const removeItem = (id: string) => saveCart(items.filter(i => itemKey(i) !== id))
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const shipping = items.length > 0 ? 50 : 0
   const tax = subtotal * 0.1
   const total = subtotal + shipping + tax
+
+  // Composite key so the same product in different sizes are separate line items
+  const itemKey = (item: CartItem) => `${item.id}:${item.size || 'default'}`
 
   if (loading) {
     return (
@@ -103,7 +107,7 @@ export default function CartPage() {
           <div className="lg:col-span-2">
             <div className="space-y-6">
               {items.map((item) => (
-                <div key={item.id} className="flex gap-6 border-b border-border pb-6">
+                <div key={itemKey(item)} className="flex gap-6 border-b border-border pb-6">
                   <div className="relative h-32 w-32 flex-shrink-0 overflow-hidden rounded-sm bg-secondary">
                     <img
                       src={item.image}
@@ -116,6 +120,11 @@ export default function CartPage() {
                       <h3 className="text-lg font-display font-semibold text-foreground">
                         {item.name}
                       </h3>
+                      {item.size && (
+                        <p className="text-xs text-muted-foreground font-body mt-1 uppercase tracking-wider">
+                          Size: {item.size}
+                        </p>
+                      )}
                       <p className="text-accent font-semibold mt-2">
                         ₦{item.price.toLocaleString()}
                       </p>
@@ -123,21 +132,21 @@ export default function CartPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          onClick={() => updateQuantity(itemKey(item), item.quantity - 1)}
                           className="p-1 hover:bg-secondary rounded"
                         >
                           <Minus size={16} className="text-foreground" />
                         </button>
                         <span className="w-8 text-center text-foreground">{item.quantity}</span>
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          onClick={() => updateQuantity(itemKey(item), item.quantity + 1)}
                           className="p-1 hover:bg-secondary rounded"
                         >
                           <Plus size={16} className="text-foreground" />
                         </button>
                       </div>
                       <button
-                        onClick={() => removeItem(item.id)}
+                        onClick={() => removeItem(itemKey(item))}
                         className="text-muted-foreground hover:text-destructive transition"
                       >
                         <Trash2 size={20} />

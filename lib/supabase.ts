@@ -15,6 +15,7 @@ export interface Product {
   reviews: number
   description?: string
   in_stock?: boolean
+  sizes?: string[]
 }
 
 export interface Order {

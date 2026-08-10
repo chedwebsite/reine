@@ -1,6 +1,6 @@
 -- Run this in your Supabase SQL Editor to seed the products table
 
-insert into products (name, category, price, image, rating, reviews, description, in_stock) values
+insert into products (name, category, price, image, rating, reviews, description, in_stock, sizes) values
 
 -- Haute Couture
 (
@@ -11,7 +11,8 @@ insert into products (name, category, price, image, rating, reviews, description
   5,
   24,
   'An exquisite floor-length silk evening gown with hand-embroidered detailing. Crafted from the finest Italian silk, this piece embodies timeless elegance.',
-  true
+  true,
+array['XS','S','M','L','XL','XXL']
 ),
 (
   'Tailored Blazer',
@@ -21,7 +22,8 @@ insert into products (name, category, price, image, rating, reviews, description
   4.9,
   31,
   'A precision-tailored blazer in premium wool crepe. Structured shoulders and a refined silhouette make this a wardrobe cornerstone.',
-  true
+  true,
+array['XS','S','M','L','XL','XXL']
 ),
 (
   'Velvet Cocktail Dress',
@@ -31,7 +33,8 @@ insert into products (name, category, price, image, rating, reviews, description
   4.8,
   17,
   'Deep midnight velvet cocktail dress with a sweetheart neckline and subtle train. Perfect for black-tie occasions.',
-  true
+  true,
+array['XS','S','M','L','XL','XXL']
 ),
 (
   'Couture Trench Coat',
@@ -41,7 +44,8 @@ insert into products (name, category, price, image, rating, reviews, description
   5,
   9,
   'A statement trench coat in double-faced cashmere with gold-tone hardware. Timeless design meets modern luxury.',
-  true
+  true,
+array['S','M','L','XL']
 ),
 
 -- Accessories
@@ -53,7 +57,8 @@ insert into products (name, category, price, image, rating, reviews, description
   4.8,
   18,
   'Structured top-handle bag in full-grain calfskin leather. Features a detachable chain strap and gold-tone clasp closure.',
-  true
+  true,
+null
 ),
 (
   'Designer Heels',
@@ -63,7 +68,8 @@ insert into products (name, category, price, image, rating, reviews, description
   4.7,
   15,
   'Pointed-toe stiletto heels in nude satin with a delicate ankle strap. Handcrafted in Italy for the perfect fit.',
-  true
+  true,
+array['36','37','38','39','40','41','42']
 ),
 (
   'Cashmere Scarf',
@@ -73,7 +79,8 @@ insert into products (name, category, price, image, rating, reviews, description
   4.9,
   28,
   'Ultra-soft pure cashmere scarf in a classic oversized weave. Sourced from the finest Mongolian cashmere.',
-  true
+  true,
+null
 ),
 (
   'Silk Clutch Bag',
@@ -83,7 +90,8 @@ insert into products (name, category, price, image, rating, reviews, description
   4.6,
   11,
   'Evening clutch in hand-painted silk with a mother-of-pearl clasp. Each piece is uniquely finished by artisan hands.',
-  true
+  true,
+null
 ),
 
 -- Jewelry
@@ -95,7 +103,8 @@ insert into products (name, category, price, image, rating, reviews, description
   5,
   12,
   'Brilliant-cut diamond drop earrings set in 18k white gold. Each stone is hand-selected for exceptional clarity and brilliance.',
-  true
+  true,
+null
 ),
 (
   'Gold Bracelet',
@@ -105,7 +114,8 @@ insert into products (name, category, price, image, rating, reviews, description
   4.8,
   22,
   'Solid 18k yellow gold link bracelet with a secure lobster clasp. A timeless piece that transcends trends.',
-  true
+  true,
+null
 ),
 (
   'Pearl Necklace',
@@ -115,7 +125,8 @@ insert into products (name, category, price, image, rating, reviews, description
   5,
   19,
   'South Sea cultured pearl strand necklace with a diamond-set 18k gold clasp. Each pearl is matched for size, lustre, and colour.',
-  true
+  true,
+null
 ),
 (
   'Sapphire Ring',
@@ -125,5 +136,6 @@ insert into products (name, category, price, image, rating, reviews, description
   5,
   8,
   'Ceylon sapphire solitaire ring flanked by pavé diamonds in platinum. A rare gemstone of exceptional colour saturation.',
-  true
+  true,
+null
 );

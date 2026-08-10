@@ -74,6 +74,10 @@ function CollectionsContent() {
 
   const addToCart = (product: Product) => {
     if (!user) { window.location.href = '/login'; return }
+    if (Array.isArray(product.sizes) && product.sizes.length > 0) {
+      window.location.href = `/products/${product.id}`
+      return
+    }
     const existing = cart.find(i => i.id === product.id)
     const updated = existing
       ? cart.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i)
