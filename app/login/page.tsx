@@ -39,7 +39,16 @@ function LoginContent() {
         router.push(next)
       }
     } else {
-      const { error, data } = await supabase.auth.signUp({ email, password })
+      // Always send the confirmation link to the host the user is actually on
+      // (e.g. https://reine-mocha.vercel.app in production, localhost in dev) so
+      // the email redirect never points to 'localhost' on a deployed site.
+      const { error, data } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        },
+      })
       if (error) {
         setMessage({ type: 'error', text: error.message })
       } else {
@@ -74,6 +83,9 @@ function LoginContent() {
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email: email || resetEmail,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      },
     })
     if (error) {
       setMessage({ type: 'error', text: error.message })
