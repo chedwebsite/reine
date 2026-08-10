@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { ShoppingCart, Heart } from 'lucide-react'
 import { supabase, type Product } from '@/lib/supabase'
 import { useAuth } from '@/components/auth-provider'
-import Navbar from '@/components/navbar'
 
 export default function SalePage() {
   const { user } = useAuth()
@@ -71,7 +70,6 @@ export default function SalePage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <Navbar />
 
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-accent text-[#0a0a0a] px-6 py-3 rounded-sm font-body font-semibold text-sm shadow-lg">

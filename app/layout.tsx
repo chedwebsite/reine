@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Cormorant_Garamond, Jost } from 'next/font/google'
 import { AuthProvider } from '@/components/auth-provider'
+import StorefrontChrome from '@/components/storefront-chrome'
 import './globals.css'
 
 const cormorant = Cormorant_Garamond({
@@ -76,7 +77,9 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
         <AuthProvider>
-          {children}
+          <StorefrontChrome>
+            {children}
+          </StorefrontChrome>
         </AuthProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

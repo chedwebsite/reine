@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import { Package } from 'lucide-react'
-import Navbar from '@/components/navbar'
 import OrdersPagination from '@/components/order/orders-pagination'
 
 const PAGE_SIZE = 10
@@ -60,7 +59,6 @@ export default async function OrdersPage({
 
   return (
     <main className="min-h-screen bg-background">
-      <Navbar />
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-display font-bold text-foreground mb-4">My Orders</h1>

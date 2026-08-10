@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import { Package, Truck, CheckCircle2, Clock, XCircle, ChevronLeft, MapPin } from 'lucide-react'
-import Navbar from '@/components/navbar'
 import CancelOrderButton from '@/components/order/cancel-order-button'
 
 interface OrderItem {
@@ -53,7 +52,6 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
   return (
     <main className="min-h-screen bg-background">
-      <Navbar />
 
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8">
         <Link href="/orders" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-accent transition mb-8">

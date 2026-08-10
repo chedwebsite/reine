@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { ShoppingCart, Heart, ArrowLeft, Star } from 'lucide-react'
 import { supabase, type Product } from '@/lib/supabase'
 import { useAuth } from '@/components/auth-provider'
-import Navbar from '@/components/navbar'
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -70,7 +69,6 @@ export default function ProductDetailPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-background">
-        <Navbar />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 animate-pulse">
             <div className="h-[500px] bg-secondary rounded-sm" />
@@ -88,7 +86,6 @@ export default function ProductDetailPage() {
   if (!product) {
     return (
       <main className="min-h-screen bg-background">
-        <Navbar />
         <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
           <h1 className="text-3xl font-display font-bold text-foreground mb-4">Product Not Found</h1>
           <Link href="/collections" className="text-accent hover:text-accent/80 font-body">← Back to Collections</Link>
@@ -123,7 +120,6 @@ export default function ProductDetailPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
-      <Navbar />
 
       {/* Toast */}
       {toast && (

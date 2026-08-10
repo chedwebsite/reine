@@ -207,27 +207,31 @@ export default function Navbar() {
             )}
 
 
-            {/* Cart */}
-            <Link href="/cart" className="relative p-2 text-[#8a8478] hover:text-accent transition-colors duration-300" title="Cart">
-              <ShoppingCart size={19} />
-              {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-accent text-[#080808] text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-body font-semibold leading-none animate-scale-in">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
+            {/* Cart — only visible to logged-in users */}
+            {user && (
+              <Link href="/cart" className="relative p-2 text-[#8a8478] hover:text-accent transition-colors duration-300" title="Cart">
+                <ShoppingCart size={19} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-accent text-[#080808] text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-body font-semibold leading-none animate-scale-in">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+            )}
           </div>
 
-          {/* Mobile/tablet right — cart + hamburger */}
+          {/* Mobile/tablet right — cart (logged in only) + hamburger */}
           <div className="lg:hidden flex items-center gap-1">
-            <Link href="/cart" className="relative p-2 text-[#8a8478] hover:text-accent transition-colors duration-300" title="Cart">
-              <ShoppingCart size={20} />
-              {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-accent text-[#080808] text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-body font-semibold leading-none animate-scale-in">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
+            {user && (
+              <Link href="/cart" className="relative p-2 text-[#8a8478] hover:text-accent transition-colors duration-300" title="Cart">
+                <ShoppingCart size={20} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-accent text-[#080808] text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-body font-semibold leading-none animate-scale-in">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+            )}
             <button
               onClick={() => setMobileOpen(v => !v)}
               className="p-2 text-[#8a8478] hover:text-accent transition-colors duration-300"
@@ -281,17 +285,6 @@ export default function Navbar() {
 
           {!user && (
             <div className="mt-3 flex flex-col gap-2">
-              <Link
-                href="/cart"
-                className="px-3 py-3 rounded-sm text-sm font-body text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c] transition-all flex items-center justify-between gap-3"
-              >
-                <span className="flex items-center gap-3"><ShoppingCart size={15} /> Cart</span>
-                {cartCount > 0 && (
-                  <span className="bg-accent text-[#080808] text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-body font-semibold leading-none">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
               <Link
                 href="/track-order"
                 className="px-3 py-3 rounded-sm text-sm font-body text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c] transition-all flex items-center gap-3"

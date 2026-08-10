@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import { Package, Heart, Settings, ChevronRight } from 'lucide-react'
-import Navbar from '@/components/navbar'
 import ProfileForm from '@/components/account/profile-form'
 import PasswordResetForm from '@/components/account/password-reset-form'
 
@@ -60,7 +59,6 @@ export default async function AccountPage({
 
   return (
     <main className="min-h-screen bg-background">
-      <Navbar />
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-3xl font-display font-bold text-foreground mb-8">My Account</h1>

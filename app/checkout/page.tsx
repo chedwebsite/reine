@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Navbar from '@/components/navbar'
 import { useAuth } from '@/components/auth-provider'
 
 interface CartItem {
@@ -196,7 +195,6 @@ function CheckoutContent() {
 
   return (
     <main className="min-h-screen bg-background">
-      <Navbar />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-3xl font-display font-bold text-foreground mb-12">Checkout</h1>

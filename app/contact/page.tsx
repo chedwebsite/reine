@@ -1,9 +1,7 @@
 'use client'
 
-import Link from 'next/link'
 import { Mail, Phone, MapPin } from 'lucide-react'
 import { useState } from 'react'
-import Navbar from '@/components/navbar'
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false)
@@ -45,7 +43,6 @@ export default function ContactPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <Navbar />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
         {/* Page Header */}
@@ -241,42 +238,6 @@ export default function ContactPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-background py-16 px-4 sm:px-6 lg:px-8 mt-24">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-            <div>
-              <h3 className="font-display font-semibold text-foreground mb-4">Shop</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/collections" className="hover:text-accent transition">Collections</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-display font-semibold text-foreground mb-4">Company</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/about" className="hover:text-accent transition">About Us</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-display font-semibold text-foreground mb-4">Support</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/contact" className="hover:text-accent transition">Contact</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-display font-semibold text-foreground mb-4">Legal</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/privacy" className="hover:text-accent transition">Privacy</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-border pt-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              &copy; 2024 Reine Luxe Co. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
     </main>
   )
 }

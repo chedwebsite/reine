@@ -2,8 +2,6 @@
 
 import Link from 'next/link'
 import { ChevronRight, ArrowRight } from 'lucide-react'
-import Navbar from '@/components/navbar'
-import Footer from '@/components/footer'
 import HeroSlideshow from '@/components/hero-slideshow'
 
 const collections = [
@@ -39,7 +37,6 @@ const pillars = [
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-background overflow-x-hidden">
-      <Navbar />
 
       {/* ── Hero ─────────────────────────────────────────── */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
@@ -187,7 +184,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <Footer />
     </main>
   )
 }

@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Navbar from '@/components/navbar'
 
 const openings = [
   { title: 'Senior Fashion Buyer', dept: 'Merchandising', location: 'Lagos, Nigeria', type: 'Full-time' },
@@ -11,7 +10,6 @@ const openings = [
 export default function CareersPage() {
   return (
     <main className="min-h-screen bg-background">
-      <Navbar />
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-24">
         <div className="text-center mb-16">

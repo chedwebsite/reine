@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { CheckCircle2, Package } from 'lucide-react'
-import Navbar from '@/components/navbar'
 
 function OrderConfirmationContent() {
   const searchParams = useSearchParams()
@@ -12,7 +11,6 @@ function OrderConfirmationContent() {
 
   return (
     <main className="min-h-screen bg-background">
-      <Navbar />
 
       <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 py-24">
         <div className="text-center space-y-8">

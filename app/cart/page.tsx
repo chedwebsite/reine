@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
-import Navbar from '@/components/navbar'
 
 interface CartItem {
   id: string
@@ -77,7 +76,6 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <main className="min-h-screen bg-background">
-      <Navbar />
         <div className="flex flex-col items-center justify-center py-24 px-4">
           <ShoppingBag size={48} className="text-muted-foreground mb-4" />
           <h1 className="text-3xl font-display font-bold text-foreground mb-4">Your Cart is Empty</h1>
@@ -97,7 +95,6 @@ export default function CartPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <Navbar />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-3xl font-display font-bold text-foreground mb-12">Shopping Cart</h1>

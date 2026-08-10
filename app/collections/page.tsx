@@ -6,8 +6,6 @@ import { useState, useEffect, useCallback, Suspense, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase, type Product } from '@/lib/supabase'
 import { useAuth } from '@/components/auth-provider'
-import Navbar from '@/components/navbar'
-import Footer from '@/components/footer'
 
 export default function CollectionsPage() {
   return (
@@ -107,7 +105,6 @@ function CollectionsContent() {
 
   return (
     <main className="min-h-screen bg-background">
-      <Navbar />
 
       {/* Toast */}
       {toast && (
@@ -238,7 +235,6 @@ function CollectionsContent() {
         </div>
       </div>
 
-      <Footer />
     </main>
   )
 }

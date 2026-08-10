@@ -1,7 +1,5 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import Navbar from '@/components/navbar'
-import Footer from '@/components/footer'
 
 export const metadata: Metadata = {
   title: 'About Us | Reine Luxe Co.',
@@ -29,7 +27,6 @@ const commitments = [
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-background">
-      <Navbar />
 
       {/* Hero */}
       <section className="relative py-32 px-4 text-center overflow-hidden border-b border-[#1c1c1c]">
@@ -110,7 +107,6 @@ export default function AboutPage() {
         </section>
       </div>
 
-      <Footer />
     </main>
   )
 }

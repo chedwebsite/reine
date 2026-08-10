@@ -54,9 +54,9 @@ export default function Footer() {
         </div>
 
         {/* Link columns */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16 max-w-3xl mx-auto w-full">
           {cols.map(({ heading, links }) => (
-            <div key={heading}>
+            <div key={heading} className="flex flex-col items-center text-center">
               <p className="label-luxury mb-5">{heading}</p>
               <ul className="space-y-3">
                 {links.map(({ href, label }) => (

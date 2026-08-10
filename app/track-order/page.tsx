@@ -13,7 +13,6 @@ import {
   Search,
   Loader2,
 } from 'lucide-react'
-import Navbar from '@/components/navbar'
 
 interface OrderItem {
   id?: string
@@ -105,7 +104,6 @@ function TrackOrderContent() {
 
   return (
     <main className="min-h-screen bg-background">
-      <Navbar />
 
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-10">
