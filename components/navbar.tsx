@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
-import { ShoppingCart, Heart, User, LogOut, Menu, X, Search, LayoutDashboard, PackageSearch } from 'lucide-react'
+import { ShoppingCart, Heart, User, LogOut, Menu, X, Search, LayoutDashboard } from 'lucide-react'
 
 import { useAuth } from '@/components/auth-provider'
 import { createClient } from '@/lib/supabase-browser'
@@ -191,13 +191,6 @@ export default function Navbar() {
             ) : (
               <>
                 <Link
-                  href="/track-order"
-                  className="p-2 text-[#8a8478] hover:text-accent transition-colors duration-300"
-                  title="Track Order"
-                >
-                  <PackageSearch size={19} />
-                </Link>
-                <Link
                   href="/login"
                   className="hidden md:inline-flex px-4 sm:px-5 py-2 border border-[#c9a84c55] text-accent text-xs font-body font-medium tracking-[0.15em] uppercase rounded-sm hover:bg-accent hover:text-[#080808] transition-all duration-300 btn-press"
                 >
@@ -285,12 +278,6 @@ export default function Navbar() {
 
           {!user && (
             <div className="mt-3 flex flex-col gap-2">
-              <Link
-                href="/track-order"
-                className="px-3 py-3 rounded-sm text-sm font-body text-[#8a8478] hover:text-foreground hover:bg-[#1c1c1c] transition-all flex items-center gap-3"
-              >
-                <PackageSearch size={15} /> Track Order
-              </Link>
               <Link
                 href="/login"
                 className="px-3 py-3 border border-[#c9a84c55] text-accent rounded-sm text-sm font-body font-medium tracking-[0.15em] uppercase text-center hover:bg-accent hover:text-[#080808] transition-all duration-300"
