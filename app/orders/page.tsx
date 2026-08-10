@@ -91,11 +91,19 @@ export default async function OrdersPage({
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className="font-display font-semibold text-foreground">
-                      {Array.isArray(order.items) && order.items.length > 0
-                        ? `${order.items.length} item${order.items.length > 1 ? 's' : ''}`
-                        : order.customer_name}
-                    </p>
+                    <div>
+                      <p className="font-display font-semibold text-foreground">
+                        {Array.isArray(order.items) && order.items.length > 0
+                          ? `${order.items.length} item${order.items.length > 1 ? 's' : ''}`
+                          : order.customer_name}
+                      </p>
+                      {Array.isArray(order.items) && order.items.length > 0 && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {order.items.slice(0, 2).map((it: any) => `${it.name}${it.size ? ` (Size ${it.size})` : ''}`).join(', ')}
+                          {order.items.length > 2 ? ` +${order.items.length - 2} more` : ''}
+                        </p>
+                      )}
+                    </div>
                     <p className="font-display font-bold text-accent">₦{Number(order.amount).toLocaleString()}</p>
                   </div>
                   <div className="flex items-center justify-between text-xs">

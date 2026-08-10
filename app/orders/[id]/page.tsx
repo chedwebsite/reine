@@ -11,6 +11,7 @@ interface OrderItem {
   price: number
   quantity: number
   image?: string
+  size?: string
 }
 
 const STATUS_FLOW = ['pending', 'paid', 'processing', 'shipped', 'delivered']
@@ -149,7 +150,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                     )}
                     <div>
                       <p className="font-body font-medium text-foreground">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {item.size ? `Size: ${item.size} · ` : ''}Qty: {item.quantity}
+                      </p>
                     </div>
                   </div>
                   <p className="font-display font-semibold text-foreground">
