@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
+import { createClient } from '@/lib/supabase-browser'
 
 interface CartItem {
   id: string
@@ -30,6 +31,7 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(false)
   const [paymentProcessing, setPaymentProcessing] = useState(false)
   const [error, setError] = useState<PaymentError | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const [paymentSuccess, setPaymentSuccess] = useState(false)
 
   // Form state
@@ -55,27 +57,88 @@ function CheckoutContent() {
   }, [user])
 
   useEffect(() => {
-    // Load cart from localStorage
-    const saved = localStorage.getItem('cart')
-    if (saved) {
-      try {
-        const cartItems = JSON.parse(saved)
-        setItems(cartItems)
-        if (cartItems.length === 0) {
-          router.push('/cart')
+    let cancelled = false
+    const supabase = createClient()
+
+    // Reconcile the localStorage cart against the live products table before
+    // showing it. The cart can go stale (a product edited/deleted, or the
+    // products table re-seeded after the item was added), and a stale id used
+    // to surface as a confusing "out of stock" 400 at payment time. Items that
+    // no longer exist or are out of stock are removed here and reported to the
+    // customer so checkout never fails on them again.
+    const reconcileCart = async (raw: CartItem[]) => {
+      const { data: products } = await supabase.from('products').select('id, name, in_stock')
+      if (!products) return { kept: raw, removed: [] }
+      const productById = new Map(products.map((p: any) => [p.id, p]))
+      const removed: string[] = []
+      const kept = raw.filter((item) => {
+        const product = productById.get(item.id)
+        if (!product) {
+          removed.push(`${item.name} (no longer available)`)
+          return false
         }
+        if (product.in_stock === false) {
+          removed.push(`${item.name} (out of stock)`)
+          return false
+        }
+        return true
+      })
+      return { kept, removed }
+    }
+
+    ;(async () => {
+      // Load cart from localStorage
+      const saved = localStorage.getItem('cart')
+      if (!saved) {
+        router.push('/cart')
+        return
+      }
+      let cartItems: CartItem[] = []
+      try {
+        cartItems = JSON.parse(saved)
       } catch (error) {
         console.error('Failed to load cart:', error)
       }
-    } else {
-      router.push('/cart')
-    }
+      if (cartItems.length === 0) {
+        router.push('/cart')
+        return
+      }
 
-    // Check if returning from payment
-    if (reference) {
-      verifyPaymentReference(reference)
+      const { kept, removed } = await reconcileCart(cartItems)
+      if (cancelled) return
+
+      if (removed.length > 0) {
+        // Persist the cleaned cart so the user doesn't re-trigger the error.
+        localStorage.setItem('cart', JSON.stringify(kept))
+        if (user) {
+          fetch('/api/cart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: kept }),
+          }).catch(() => {})
+        }
+        setNotice(
+          `Some items could not be ordered and were removed from your cart: ${[...new Set(removed)].join(', ')}.`
+        )
+      }
+
+      if (kept.length === 0) {
+        setItems([])
+        router.push('/cart')
+        return
+      }
+      setItems(kept)
+
+      // Check if returning from payment
+      if (reference) {
+        verifyPaymentReference(reference)
+      }
+    })()
+
+    return () => {
+      cancelled = true
     }
-  }, [reference, router])
+  }, [reference, router, user])
 
   const verifyPaymentReference = async (ref: string) => {
     try {
@@ -204,6 +267,11 @@ function CheckoutContent() {
           {/* Checkout Form */}
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit} className="space-y-8">
+              {notice && (
+                <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-sm">
+                  <p className="text-amber-500 text-sm font-body">{notice}</p>
+                </div>
+              )}
               {error && (
                 <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-sm">
                   <p className="text-red-500 text-sm font-body">{error.message}</p>

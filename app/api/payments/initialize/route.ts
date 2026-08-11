@@ -51,14 +51,22 @@ export async function POST(request: NextRequest) {
     const productMap = new Map((productRows ?? []).map((p: any) => [p.id, p]))
 
     const orderItems: Array<Record<string, unknown>> = []
+    const unavailableItems: string[] = []
     for (const item of items) {
       const product = productMap.get(item.id)
-      // Reject items that no longer exist or have gone out of stock.
-      if (!product || product.in_stock === false) {
-        return NextResponse.json(
-          { error: `"${item.name}" is currently out of stock and cannot be ordered.` },
-          { status: 400 }
+      // Reject items that no longer exist in the catalog. This is separate from
+      // the out-of-stock case so the customer gets an accurate message instead
+      // of a confusing "out of stock" for a product the store doesn't sell.
+      if (!product) {
+        unavailableItems.push(
+          `"${item.name}" is no longer available — please remove it from your cart`
         )
+        continue
+      }
+      // Reject items that have gone out of stock since they were added.
+      if (product.in_stock === false) {
+        unavailableItems.push(`"${item.name}" is currently out of stock and cannot be ordered`)
+        continue
       }
       const unitPrice = isOnSale(product) ? (product.sale_price as number) : product.price
       orderItems.push({
@@ -70,6 +78,15 @@ export async function POST(request: NextRequest) {
         size: item.size,
         color: item.color,
       })
+    }
+
+    // Report every problematic item at once so the customer can fix the cart in
+    // a single pass instead of guessing one item at a time.
+    if (unavailableItems.length > 0) {
+      return NextResponse.json(
+        { error: unavailableItems.join('; ') + '.' },
+        { status: 400 }
+      )
     }
 
     const subtotal = orderItems.reduce(

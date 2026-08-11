@@ -65,6 +65,27 @@ email to go to `localhost` instead of the project URL.
 > and use **Resend verification email** — old links stay broken. Full checklist:
 > `email-templates/README.md`.
 
+### "My email is confirmed automatically" — accounts are live without clicking the link
+
+If a brand-new email/password user can sign in immediately **without** clicking
+the confirmation email (in the database this shows up as `auth.users.email_confirmed_at`
+being set at the same second as `created_at`, before anyone could have clicked),
+then the dashboard's **"Confirm email"** switch is **OFF** for this project:
+
+1. Supabase Dashboard → **Authentication → Sign In / Providers → Email**.
+2. Switch **Confirm email** to **ON**.
+3. Click **Save**.
+
+With it ON, `signUp` creates the user with `email_confirmed_at = null` and **no
+session**, and sends the "Confirm your email address" email. The account only
+activates after the customer clicks that link (redirecting through
+`/auth/callback`). The login page's `handleSubmit` already handles both cases:
+a returned session means "signed in", a `null` session means "check your email".
+
+> This settings toggle lives in the **dashboard**, not in app code — no SDK call
+> can force confirmation when the project setting is off. Already-created
+> accounts keep `email_confirmed_at` set and are unaffected.
+
 ---
 
 ## 2. One-time database setup (run in SQL Editor)

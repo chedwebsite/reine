@@ -64,6 +64,16 @@ function LoginContent() {
       })
       if (error) {
         setMessage({ type: 'error', text: error.message })
+      } else if (data.session) {
+        // No session is returned ONLY when the project requires email
+        // confirmation ("Confirm email" ON in Supabase → Authentication →
+        // Sign In / Providers → Email). If a session IS returned, the dashboard
+        // has "Confirm email" switched OFF, so the account is live immediately.
+        setMessage({
+          type: 'success',
+          text: 'Your account has been created and you are signed in.',
+        })
+        router.push(next)
       } else {
         setMessage({ type: 'success', text: 'Check your email to confirm your account.' })
         setShowResend(true)
