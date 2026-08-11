@@ -1,20 +1,29 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2, KeyRound } from 'lucide-react'
 import { createClient } from '@/lib/supabase-browser'
 import PasswordResetForm from '@/components/account/password-reset-form'
 
 /**
- * Dedicated password‑reset page.
+ * Dedicated password-reset page.
  *
- * Reachable either via /auth/callback (code flow) or directly via the global
- * RecoveryHandler (hash flow). It waits until Supabase has a valid recovery
- * session, then shows the password form.
+ * Handles BOTH recovery flows:
+ *  - PKCE code flow: the reset email carries `?code=...`. The code must be
+ *    exchanged on the CLIENT because the code_verifier lives in the browser
+ *    that initiated the reset — a server route can't access it (this is why
+ *    the old /auth/callback server path produced "Email link is invalid or
+ *    has expired").
+ *  - Hash flow: tokens arrive in the URL fragment (`#access_token=...`) which
+ *    Supabase's browser client picks up and surfaces as PASSWORD_RECOVERY.
+ *
+ * Once a valid recovery session exists, the password form is shown.
  */
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const supabase = createClient()
+  const searchParams = useSearchParams()
   const [state, setState] = useState<'loading' | 'ready' | 'invalid'>('loading')
   const done = useRef(false)
 
@@ -22,8 +31,22 @@ export default function ResetPasswordPage() {
     let subscription: { unsubscribe: () => void } | undefined
 
     async function init() {
-      // A session may already be set from the recovery hash on this page or
-      // from a previous redirect.
+      // 1. PKCE code flow — exchange on the client so the code_verifier is used.
+      const code = searchParams.get('code')
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        if (done.current) return
+        if (error) {
+          done.current = true
+          setState('invalid')
+          return
+        }
+        done.current = true
+        setState('ready')
+        return
+      }
+
+      // 2. A session may already be present (hash flow set it on this page).
       const { data: { session } } = await supabase.auth.getSession()
       if (done.current) return
       if (session?.user) {
@@ -32,7 +55,7 @@ export default function ResetPasswordPage() {
         return
       }
 
-      // Otherwise wait for the recovery session to arrive (PASSWORD_RECOVERY).
+      // 3. Hash flow — wait for Supabase to surface the recovery session.
       const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
         if (event === 'PASSWORD_RECOVERY' || session?.user) {
           done.current = true
@@ -57,7 +80,7 @@ export default function ResetPasswordPage() {
       clearTimeout(timer)
       subscription?.unsubscribe()
     }
-  }, [supabase])
+  }, [supabase, searchParams])
 
   if (state === 'loading') {
     return (
@@ -99,3 +122,12 @@ export default function ResetPasswordPage() {
     </main>
   )
 }
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-accent" /></main>}>
+      <ResetPasswordContent />
+    </Suspense>
+  )
+}
+

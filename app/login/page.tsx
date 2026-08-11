@@ -78,7 +78,9 @@ function LoginContent() {
     setMessage(null)
 
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: getAuthCallbackUrl('/account'),
+      // Route the PKCE code to the client reset page where it can be exchanged
+      // using the code_verifier stored in this browser.
+      redirectTo: `${getSiteUrl()}/auth/reset-password`,
     })
 
     if (error) {
