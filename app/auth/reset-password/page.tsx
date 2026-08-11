@@ -46,6 +46,24 @@ function ResetPasswordContent() {
         return
       }
 
+      // 1b. token_hash flow — used by some transports/versions; does NOT need
+      //     the code_verifier, so it also works when the link is opened on a
+      //     different browser/device than the one that requested it.
+      const tokenHash = searchParams.get('token_hash')
+      const type = searchParams.get('type')
+      if (!code && tokenHash && type === 'recovery') {
+        const { error } = await supabase.auth.verifyOtp({ type: 'recovery', token_hash: tokenHash })
+        if (done.current) return
+        if (error) {
+          done.current = true
+          setState('invalid')
+          return
+        }
+        done.current = true
+        setState('ready')
+        return
+      }
+
       // 2. A session may already be present (hash flow set it on this page).
       const { data: { session } } = await supabase.auth.getSession()
       if (done.current) return

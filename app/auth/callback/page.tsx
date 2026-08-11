@@ -1,0 +1,133 @@
+'use client'
+
+import { Suspense, useEffect, useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { Loader2, CheckCircle2, XCircle } from 'lucide-react'
+import { createClient } from '@/lib/supabase-browser'
+
+/**
+ * Client-side auth callback.
+ *
+ * Handles ALL auth links that come back through /auth/callback:
+ *  - PKCE `?code=...` (OAuth, signup, recovery): exchanged on the CLIENT,
+ *    because the code_verifier lives in this browser's storage — a server
+ *    route can't access it.
+ *  - `?token_hash=...&type=...` (email confirmation / magic link / invite):
+ *    verified with verifyOtp, which does NOT need the code_verifier.
+ *
+ * This replaces the previous server route, which silently failed on PKCE
+ * (producing "Email link is invalid or has expired") and ignored token_hash.
+ */
+function AuthCallbackContent() {
+  const supabase = createClient()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [state, setState] = useState<'loading' | 'success' | 'error'>('loading')
+  const [error, setError] = useState<string | null>(null)
+  const handled = useRef(false)
+
+  useEffect(() => {
+    async function process() {
+      const code = searchParams.get('code')
+      const tokenHash = searchParams.get('token_hash')
+      const type = searchParams.get('type') ?? 'email'
+      const next = searchParams.get('next') ?? '/'
+
+      try {
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code)
+          if (handled.current) return
+          if (error) {
+            handled.current = true
+            setState('error')
+            setError(error.message)
+            return
+          }
+        } else if (tokenHash) {
+          const validTypes = ['signup', 'email', 'recovery', 'magiclink', 'email_change', 'sms']
+          const otpType = validTypes.includes(type) ? (type as 'signup') : 'email'
+          const { error } = await supabase.auth.verifyOtp({ type: otpType, token_hash: tokenHash })
+          if (handled.current) return
+          if (error) {
+            handled.current = true
+            setState('error')
+            setError(error.message)
+            return
+          }
+        } else {
+          handled.current = true
+          setState('error')
+          setError('This link is missing its authentication token.')
+          return
+        }
+
+        handled.current = true
+        setState('success')
+
+        // Route to the appropriate destination after processing.
+        if (type === 'recovery') {
+          router.replace('/auth/reset-password')
+        } else if (type === 'signup' || type === 'email') {
+          router.replace('/login?confirmed=true')
+        } else {
+          router.replace(next)
+        }
+      } catch (e) {
+        handled.current = true
+        setState('error')
+        setError(e instanceof Error ? e.message : 'Unexpected error')
+      }
+    }
+
+    process()
+  }, [supabase, searchParams, router])
+
+  if (state === 'loading') {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </main>
+    )
+  }
+
+  if (state === 'error') {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="text-center space-y-4 max-w-md">
+          <div className="flex justify-center"><XCircle size={40} className="text-red-500" /></div>
+          <h1 className="text-2xl font-display font-bold text-foreground">Confirmation failed</h1>
+          <p className="text-muted-foreground text-sm">
+            {error || 'The link is invalid or has expired. Please try again or contact support.'}
+          </p>
+          <div className="flex flex-col gap-3">
+            <Link href="/login" className="inline-block bg-accent text-[#0a0a0a] px-6 py-3 rounded-sm font-display font-semibold hover:bg-accent/90 transition">
+              Go to Sign In
+            </Link>
+            <Link href="/contact" className="inline-block text-accent hover:text-accent/80 text-sm font-medium">
+              Contact Support
+            </Link>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  return (
+    <main className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="text-center space-y-4">
+        <div className="flex justify-center"><CheckCircle2 size={48} className="text-green-500" /></div>
+        <h1 className="text-2xl font-display font-bold text-foreground">Success!</h1>
+        <p className="text-muted-foreground text-sm">Redirecting you…</p>
+      </div>
+    </main>
+  )
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-accent" /></main>}>
+      <AuthCallbackContent />
+    </Suspense>
+  )
+}
