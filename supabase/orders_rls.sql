@@ -55,4 +55,3 @@ create policy "Admins can do everything" on orders
 -- and status updates happen server-side (webhook, verify, admin). This closes
 -- the previous "anyone can insert orders" and "any authenticated user can
 -- update any order (using(true))" holes.
-
