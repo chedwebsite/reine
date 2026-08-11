@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { accountUpdateSchema } from '@/lib/validation'
+import { applySameOrigin } from '@/lib/security'
 
 export async function GET() {
   const supabase = await createClient()
@@ -28,6 +29,9 @@ export async function PATCH(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const originError = applySameOrigin(request)
+  if (originError) return originError
 
   const body = await request.json().catch(() => null)
   const parsed = accountUpdateSchema.safeParse(body)

@@ -59,6 +59,7 @@ function SearchContent() {
 
   const addToCart = useCallback((product: Product) => {
     if (!user) { router.push('/login'); return }
+    if (product.in_stock === false) { showToast('This item is currently out of stock'); return }
     try {
       const saved = localStorage.getItem('cart')
       const cart = saved ? JSON.parse(saved) : []

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { requireAdmin, applyRateLimit } from '@/lib/security'
 import { adminOrderUpdateSchema } from '@/lib/validation'
 import { sendOrderStatusUpdate } from '@/lib/email'
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   const rateError = applyRateLimit(req, 60, 60_000)
   if (rateError) return rateError
 
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   // Search + filter + pagination
   const url = new URL(req.url)
@@ -75,7 +75,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   const { id, status, trackingNumber } = parsed.data
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   // Fetch current order to append to status_history
   const { data: existing } = await supabase

@@ -163,4 +163,35 @@ export function applyCsrf(req: NextRequest): NextResponse | null {
   return null
 }
 
+/**
+ * Same-origin check for state-changing requests.
+ *
+ * Browsers always send an `Origin` header on non-GET requests. Cross-site
+ * requests will have a different origin than this app's host and are rejected
+ * here. Non-browser clients (server-to-server, curl, webhooks) typically omit
+ * the header and are allowed through — those paths use their own auth
+ * (e.g. the Paystack signature) instead.
+ */
+export function applySameOrigin(req: NextRequest): NextResponse | null {
+  const origin = req.headers.get('origin')
+  if (!origin) return null // non-browser / server-side client
+
+  try {
+    const host = req.headers.get('host')
+    const originHost = new URL(origin).host
+    if (host && host !== originHost) {
+      return NextResponse.json(
+        { error: 'Invalid request origin' },
+        { status: 403 }
+      )
+    }
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid request origin' },
+      { status: 403 }
+    )
+  }
+  return null
+}
+
 export { CSRF_COOKIE, CSRF_HEADER }

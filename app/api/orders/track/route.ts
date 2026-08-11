@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { applyRateLimit } from '@/lib/security'
 import { orderTrackSchema } from '@/lib/validation'
 import { sendOrderStatusUpdate } from '@/lib/email'
@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
     const reference = parsed.data.reference.trim()
     const email = parsed.data.email.trim().toLowerCase()
 
-    const { data: order, error } = await supabase
+    const admin = createAdminClient()
+    const { data: order, error } = await admin
       .from('orders')
       .select(
         'id, customer_name, customer_email, amount, paystack_reference, status, items, shipping_address, tracking_number, status_history, created_at'

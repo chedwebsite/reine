@@ -75,6 +75,7 @@ function CollectionsContent() {
 
   const addToCart = (product: Product) => {
     if (!user) { window.location.href = '/login'; return }
+    if (product.in_stock === false) { showToast('This item is currently out of stock'); return }
     if ((Array.isArray(product.sizes) && product.sizes.length > 0) ||
         (Array.isArray(product.colors) && product.colors.length > 0)) {
       window.location.href = `/products/${product.id}`

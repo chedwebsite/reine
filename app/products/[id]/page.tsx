@@ -40,6 +40,7 @@ export default function ProductDetailPage() {
   const addToCart = useCallback(() => {
     if (!user) { router.push('/login'); return }
     if (!product) return
+    if (product.in_stock === false) { showToast('This item is currently out of stock'); return }
     const hasSizes = Array.isArray(product.sizes) && product.sizes.length > 0
     const hasColors = Array.isArray(product.colors) && product.colors.length > 0
     if (hasSizes && !selectedSize) { showToast('Please select a size'); return }

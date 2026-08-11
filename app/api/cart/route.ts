@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { cartUpdateSchema } from '@/lib/validation'
+import { applySameOrigin } from '@/lib/security'
 
 export async function GET() {
   const supabase = await createClient()
@@ -14,6 +15,9 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const originError = applySameOrigin(req)
+  if (originError) return originError
 
   const body = await req.json().catch(() => null)
   const parsed = cartUpdateSchema.safeParse(body)

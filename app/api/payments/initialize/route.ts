@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { initializePayment } from '@/lib/paystack'
-import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { sendOrderStatusUpdate } from '@/lib/email'
-import { applyRateLimit } from '@/lib/security'
+import { applyRateLimit, applySameOrigin } from '@/lib/security'
 import { paymentInitializeSchema } from '@/lib/validation'
+import { isOnSale } from '@/lib/pricing'
 
 export async function POST(request: NextRequest) {
   try {
     // Rate limit: 10 payment initializations per minute per IP
     const rateError = applyRateLimit(request, 10, 60_000)
     if (rateError) return rateError
+
+    // Same-origin (CSRF) check
+    const originError = applySameOrigin(request)
+    if (originError) return originError
 
     const body = await request.json().catch(() => null)
     const parsed = paymentInitializeSchema.safeParse(body)
@@ -20,7 +25,60 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { email, amount, orderId, customerName, items, userId, shippingAddress } = parsed.data
+    const { email, orderId, customerName, items, userId, shippingAddress } = parsed.data
+
+    // ── Server-side price & stock validation ────────────────────────
+    // Never trust client-supplied prices or stock status. The prices on the
+    // cart come from localStorage (fully editable), so we recompute the
+    // chargeable amount from the products table. This also blocks ordering an
+    // item that has gone out of stock since it was added to the cart.
+    const supabase = createAdminClient()
+
+    if (!items || items.length === 0) {
+      return NextResponse.json({ error: 'Your cart is empty.' }, { status: 400 })
+    }
+
+    const ids = [...new Set(items.map((i) => i.id))]
+    const { data: productRows, error: productError } = await supabase
+      .from('products')
+      .select('id, name, price, sale_price, in_stock')
+      .in('id', ids)
+
+    if (productError) {
+      return NextResponse.json({ error: 'Unable to validate cart items' }, { status: 500 })
+    }
+
+    const productMap = new Map((productRows ?? []).map((p: any) => [p.id, p]))
+
+    const orderItems: Array<Record<string, unknown>> = []
+    for (const item of items) {
+      const product = productMap.get(item.id)
+      // Reject items that no longer exist or have gone out of stock.
+      if (!product || product.in_stock === false) {
+        return NextResponse.json(
+          { error: `"${item.name}" is currently out of stock and cannot be ordered.` },
+          { status: 400 }
+        )
+      }
+      const unitPrice = isOnSale(product) ? (product.sale_price as number) : product.price
+      orderItems.push({
+        id: item.id,
+        name: product.name,
+        price: unitPrice,
+        quantity: Math.max(1, Math.floor(item.quantity)),
+        image: item.image,
+        size: item.size,
+        color: item.color,
+      })
+    }
+
+    const subtotal = orderItems.reduce(
+      (sum, i) => sum + (i.price as number) * (i.quantity as number),
+      0
+    )
+    const shipping = orderItems.length > 0 ? 50 : 0
+    const tax = subtotal * 0.1
+    const amount = subtotal + shipping + tax
 
     const result = await initializePayment({
       email,
@@ -31,8 +89,6 @@ export async function POST(request: NextRequest) {
 
     const reference = result.data?.reference
     if (reference) {
-      const supabase = await createClient()
-
       // Use Paystack reference as the tracking number
       const trackingNumber = reference
 
@@ -42,7 +98,7 @@ export async function POST(request: NextRequest) {
         amount,
         paystack_reference: reference,
         status: 'pending',
-        items: items ?? [],
+        items: orderItems,
         // Store the authenticated user's ID so orders can be tracked reliably
         user_id: userId ?? null,
         // Store shipping address on the order

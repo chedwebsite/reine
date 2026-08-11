@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { sendOrderStatusUpdate } from '@/lib/email'
 import { z } from 'zod'
+import { applySameOrigin } from '@/lib/security'
 
 const cancelOrderSchema = z.object({
   id: z.string().uuid('Invalid order ID'),
@@ -11,6 +12,9 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const originError = applySameOrigin(request)
+  if (originError) return originError
 
   const body = await request.json().catch(() => null)
   const parsed = cancelOrderSchema.safeParse(body)

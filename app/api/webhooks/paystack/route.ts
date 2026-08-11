@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { supabase } from '@/lib/supabase'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { sendOrderConfirmation, sendOrderStatusUpdate } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
@@ -18,7 +18,11 @@ export async function POST(request: NextRequest) {
   if (event.event === 'charge.success') {
     const { reference, customer, amount, metadata } = event.data
 
-    const { data: order } = await supabase
+    // Use the service-role client so the server-to-server webhook can update
+    // order status without relying on permissive anonymous RLS policies.
+    const admin = createAdminClient()
+
+    const { data: order } = await admin
       .from('orders')
       .update({ status: 'paid' })
       .eq('paystack_reference', reference)

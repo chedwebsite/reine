@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer'
 import { NextRequest, NextResponse } from 'next/server'
-import { applyRateLimit } from '@/lib/security'
+import { applyRateLimit, applySameOrigin } from '@/lib/security'
 import { contactSchema } from '@/lib/validation'
 
 const transporter = nodemailer.createTransport({
@@ -15,6 +15,10 @@ export async function POST(req: NextRequest) {
   // Rate limit: 5 contact submissions per minute per IP
   const rateError = applyRateLimit(req, 5, 60_000)
   if (rateError) return rateError
+
+  // Same-origin (CSRF) check
+  const originError = applySameOrigin(req)
+  if (originError) return originError
 
   const body = await req.json().catch(() => null)
   const parsed = contactSchema.safeParse(body)

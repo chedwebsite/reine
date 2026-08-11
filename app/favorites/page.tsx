@@ -43,6 +43,10 @@ export default function FavoritesPage() {
   }
 
   function addToCart(product: Product) {
+    if (product.in_stock === false) {
+      showToast('This item is currently out of stock')
+      return
+    }
     const saved = localStorage.getItem('cart')
     const cart = saved ? JSON.parse(saved) : []
     const existing = cart.find((i: any) => i.id === product.id)
@@ -100,6 +104,11 @@ export default function FavoritesPage() {
                   {isOnSale(product) && (
                     <span className="absolute top-4 left-4 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-sm">SALE</span>
                   )}
+                  {product.in_stock === false && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span className="text-white text-xs font-semibold tracking-widest border border-white/50 px-3 py-1">OUT OF STOCK</span>
+                    </div>
+                  )}
                   <button
                     onClick={() => removeFavorite(product.id)}
                     className="absolute top-4 right-4 bg-background/80 backdrop-blur-sm p-2 rounded-sm transition text-red-400 hover:text-red-300"
@@ -119,7 +128,9 @@ export default function FavoritesPage() {
                     </div>
                     <button
                       onClick={() => addToCart(product)}
-                      className="p-2 bg-accent text-[#0a0a0a] rounded-sm hover:bg-accent/90 transition"
+                      disabled={product.in_stock === false}
+                      title={product.in_stock === false ? 'Out of stock' : 'Add to cart'}
+                      className="p-2 bg-accent text-[#0a0a0a] rounded-sm hover:bg-accent/90 transition disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <ShoppingCart size={18} />
                     </button>
