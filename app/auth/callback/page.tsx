@@ -15,6 +15,12 @@ import { createClient } from '@/lib/supabase-browser'
  *    route can't access it.
  *  - `?token_hash=...&type=...` (email confirmation / magic link / invite):
  *    verified with verifyOtp, which does NOT need the code_verifier.
+ *  - `<url>#access_token=...&type=...` (implicit-grant / fragment format that
+ *    signup confirmation emails use). The tokens live in the URL FRAGMENT, so
+ *    useSearchParams never exposes them. supabase-js auto-detects the fragment
+ *    during client init (_initialize → _getSessionFromURL), confirms the email
+ *    server-side, stores the session and clears the hash. We simply wait for
+ *    that automatic processing via getSession() and check a session exists.
  *
  * This replaces the previous server route, which silently failed on PKCE
  * (producing "Email link is invalid or has expired") and ignored token_hash.
@@ -56,10 +62,26 @@ function AuthCallbackContent() {
             return
           }
         } else {
-          handled.current = true
-          setState('error')
-          setError('This link is missing its authentication token.')
-          return
+          // Implicit-grant / fragment flow (`#access_token=...&type=...`).
+          // Signup confirmation emails commonly link to the callback with the
+          // session tokens in the URL fragment. useSearchParams cannot see
+          // those, but supabase-js auto-detects them on initialization,
+          // confirms the email server-side and stores a session. So before
+          // declaring the link invalid, wait for that automatic processing to
+          // finish (getSession() awaits the client's initializePromise) and
+          // check whether a session now exists.
+          const { data } = await supabase.auth.getSession()
+          if (handled.current) return
+          if (!data.session) {
+            handled.current = true
+            setState('error')
+            setError(
+              'This link is missing its authentication token. It may be invalid, already used, or expired. Please try again or use the "Resend verification email" option on the Sign In page.'
+            )
+            return
+          }
+          // A session was established from the URL fragment → the email was
+          // confirmed successfully.
         }
 
         handled.current = true
@@ -69,7 +91,9 @@ function AuthCallbackContent() {
         if (type === 'recovery') {
           router.replace('/auth/reset-password')
         } else if (type === 'signup' || type === 'email') {
-          router.replace('/login?confirmed=true')
+          // Keep the "next" target so "Continue to Website" on /login returns
+          // the user to wherever they were headed.
+          router.replace(`/login?confirmed=true&next=${encodeURIComponent(next)}`)
         } else {
           router.replace(next)
         }

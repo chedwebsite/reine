@@ -158,11 +158,11 @@ export default function HomePage() {
       <Marquee />
 
       {/* ── CTA / Newsletter ─────────────────────────────── */}
-      <section className="relative py-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      {/* <section className="relative py-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 bg-[#0d0d0d]" />
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#c9a84c33] to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#c9a84c33] to-transparent" />
-        {/* Glow */}
+       
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-[#c9a84c06] blur-3xl pointer-events-none rounded-full" />
 
         <Reveal className="relative z-10 mx-auto max-w-2xl text-center">
@@ -189,7 +189,7 @@ export default function HomePage() {
             </button>
           </form>
         </Reveal>
-      </section>
+      </section> */}
 
     </main>
   )
