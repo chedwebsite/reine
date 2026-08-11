@@ -27,7 +27,13 @@ import { isAuthPKCECodeVerifierMissingError } from '@supabase/supabase-js'
  * (producing "Email link is invalid or has expired") and ignored token_hash.
  */
 function AuthCallbackContent() {
-  const supabase = createClient()
+  // One stable browser client for the whole page. Creating a fresh client on
+  // every render can race with the automatic `#fragment` processing
+  // (particularly under React StrictMode in dev), which is a classic cause of a
+  // false "missing its authentication token" failure for implicit-grant links.
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
+  if (!supabaseRef.current) supabaseRef.current = createClient()
+  const supabase = supabaseRef.current
   const router = useRouter()
   const searchParams = useSearchParams()
   const [state, setState] = useState<'loading' | 'success' | 'error'>('loading')
@@ -35,11 +41,37 @@ function AuthCallbackContent() {
   const handled = useRef(false)
 
   useEffect(() => {
+    async function waitForAutoProcessedSession(timeoutMs = 4000) {
+      // When Supabase redirects with tokens in the URL fragment
+      // (`#access_token=...&type=...`), supabase-js detects and stores them
+      // asynchronously on initialization. Poll getSession() (which awaits the
+      // client's initializePromise) and give the fragment processing a grace
+      // period before declaring the link dead.
+      const start = Date.now()
+      while (Date.now() - start < timeoutMs) {
+        const { data } = await supabase.auth.getSession()
+        if (data.session) return data.session
+        await new Promise((resolve) => setTimeout(resolve, 250))
+      }
+      // One last check in case the session was persisted just after the loop.
+      return (await supabase.auth.getSession()).data.session
+    }
+
     async function process() {
       const code = searchParams.get('code')
       const tokenHash = searchParams.get('token_hash')
       const type = searchParams.get('type') ?? 'email'
       const next = searchParams.get('next') ?? '/'
+
+      // Supabase redirects FAILED / EXPIRED links back with error params and
+      // NO code/token_hash. Surface the real cause instead of the generic
+      // "missing token" message, which misleads users whose link just expired.
+      const errorCode = searchParams.get('error_code')
+      const errorDescription = searchParams.get('error_description')
+      const errorParam = searchParams.get('error')
+
+      const expiredOrInvalid = (message: string) =>
+        errorCode === 'otp_expired' || /expired|invalid|already used/i.test(message)
 
       try {
         if (code) {
@@ -58,13 +90,18 @@ function AuthCallbackContent() {
             const isConfirmedButCannotSignIn =
               isAuthPKCECodeVerifierMissingError(error) && isEmailConfirmationFlow
 
-            if (!isConfirmedButCannotSignIn) {
+            if (isConfirmedButCannotSignIn) {
+              // fall through → success ("Email Confirmed"), user signs in manually
+            } else {
               handled.current = true
               setState('error')
-              setError(error.message)
+              setError(
+                expiredOrInvalid(error.message)
+                  ? 'This confirmation link has expired or was already used. Please request a new verification email from the Sign In page.'
+                  : error.message
+              )
               return
             }
-            // fall through → success ("Email Confirmed"), user signs in manually
           }
         } else if (tokenHash) {
           const validTypes = ['signup', 'email', 'recovery', 'magiclink', 'email_change', 'sms']
@@ -74,25 +111,46 @@ function AuthCallbackContent() {
           if (error) {
             handled.current = true
             setState('error')
-            setError(error.message)
+            setError(
+              expiredOrInvalid(error.message)
+                ? 'This confirmation link has expired or was already used. Please request a new verification email from the Sign In page.'
+                : error.message
+            )
             return
           }
         } else {
-          // Implicit-grant / fragment flow (`#access_token=...&type=...`).
-          // Signup confirmation emails commonly link to the callback with the
-          // session tokens in the URL fragment. useSearchParams cannot see
-          // those, but supabase-js auto-detects them on initialization,
-          // confirms the email server-side and stores a session. So before
-          // declaring the link invalid, wait for that automatic processing to
-          // finish (getSession() awaits the client's initializePromise) and
-          // check whether a session now exists.
-          const { data } = await supabase.auth.getSession()
-          if (handled.current) return
-          if (!data.session) {
+          // No code, no token_hash. Two sub-cases:
+          //
+          // 1) Supabase redirected a FAILED link back with `?error=/error_code=`.
+          // 2) Implicit-grant / fragment flow (`#access_token=...&type=...`):
+          //    the tokens live in the URL FRAGMENT, which useSearchParams cannot
+          //    see. supabase-js auto-detects the fragment during client init,
+          //    confirms the email server-side and stores the session, so wait
+          //    for that automatic processing to finish before giving up.
+          if (errorParam || errorCode) {
             handled.current = true
             setState('error')
             setError(
-              'This link is missing its authentication token. It may be invalid, already used, or expired. Please try again or use the "Resend verification email" option on the Sign In page.'
+              errorDescription && errorDescription !== 'null'
+                ? errorDescription
+                : 'This confirmation link is invalid, expired, or has already been used. Please request a new verification email from the Sign In page.'
+            )
+            return
+          }
+
+          const session = await waitForAutoProcessedSession()
+          if (handled.current) return
+          if (!session) {
+            handled.current = true
+            // The callback arrived with no auth payload at all. This happens when
+            // the link in the email doesn't actually carry the token — usually a
+            // broken email template (the button href must keep Supabase's
+            // `{{ .ConfirmationURL }}` placeholder) or an email client that
+            // mangled/truncated the URL.
+            console.warn('[auth-callback] no token payload in callback:', window.location.href)
+            setState('error')
+            setError(
+              'This link is missing its authentication token, so your email could not be verified. The link may be invalid, already used, or expired — or the confirmation email link itself may be incomplete (the email template button must use Supabase\u2019s {{ .ConfirmationURL }} placeholder). Please try again or use the "Resend verification email" option on the Sign In page.'
             )
             return
           }

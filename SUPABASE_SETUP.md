@@ -57,6 +57,14 @@ email to go to `localhost` instead of the project URL.
 > on the login page (or sign up again with a fresh address) — already-sent links
 > keep the old redirect target.
 
+> **If you land on "Confirmation failed / This link is missing its authentication
+> token":** the confirmation link arrived with no token, meaning either the
+> **Confirm signup** email template's button no longer contains
+> `{{ .ConfirmationURL }}` (check Authentication → Email Templates), or the
+> redirect URL above isn't in the dashboard's allow-list. Fix the template/settings
+> and use **Resend verification email** — old links stay broken. Full checklist:
+> `email-templates/README.md`.
+
 ---
 
 ## 2. One-time database setup (run in SQL Editor)
