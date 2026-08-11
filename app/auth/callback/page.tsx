@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase-browser'
+import { isAuthPKCECodeVerifierMissingError } from '@supabase/supabase-js'
 
 /**
  * Client-side auth callback.
@@ -45,10 +46,25 @@ function AuthCallbackContent() {
           const { error } = await supabase.auth.exchangeCodeForSession(code)
           if (handled.current) return
           if (error) {
-            handled.current = true
-            setState('error')
-            setError(error.message)
-            return
+            // PKCE link opened in a browser/device that doesn't hold the
+            // code_verifier created at signup (e.g. a different device, or after
+            // the originating browser's storage/cookies were cleared). For an
+            // email CONFIRMATION link this is NOT a real failure: Supabase's
+            // /auth/v1/verify step already confirmed the email server-side
+            // before redirecting us here. We just can't auto-sign-in on this
+            // device, so route to the confirmation-success flow instead of
+            // showing a scary "Confirmation failed".
+            const isEmailConfirmationFlow = !['recovery', 'magiclink'].includes(type)
+            const isConfirmedButCannotSignIn =
+              isAuthPKCECodeVerifierMissingError(error) && isEmailConfirmationFlow
+
+            if (!isConfirmedButCannotSignIn) {
+              handled.current = true
+              setState('error')
+              setError(error.message)
+              return
+            }
+            // fall through → success ("Email Confirmed"), user signs in manually
           }
         } else if (tokenHash) {
           const validTypes = ['signup', 'email', 'recovery', 'magiclink', 'email_change', 'sms']
