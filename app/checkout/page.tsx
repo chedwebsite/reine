@@ -6,19 +6,56 @@ import { Loader2 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { createClient } from '@/lib/supabase-browser'
+import { cartItemSchema } from '@/lib/validation'
 
 interface CartItem {
   id: string
   name: string
   price: number
   quantity: number
-  image: string
+  image?: string
   size?: string
   color?: string
 }
 
 interface PaymentError {
   message: string
+}
+
+// Validates & normalizes the raw parsed cart array into well-formed CartItem[].
+// Line-items that don't match the expected schema (older schemas, hand-edited
+// storage, missing/negative quantities, non-numeric prices) are dropped instead
+// of being persisted, and are reported through `dropped` so the customer knows
+// the cart was cleaned.
+function normalizeCartItems(raw: unknown): { items: CartItem[]; dropped: string[] } {
+  const items: CartItem[] = []
+  const dropped: string[] = []
+  if (!Array.isArray(raw)) return { items, dropped }
+
+  for (const entry of raw) {
+    const parsed = cartItemSchema.safeParse(entry)
+    if (!parsed.success) {
+      const name =
+        entry !== null &&
+        typeof entry === 'object' &&
+        typeof (entry as Record<string, unknown>).name === 'string'
+          ? (entry as { name: string }).name
+          : 'An item'
+      dropped.push(`${name} (could not be loaded and was removed)`)
+      continue
+    }
+    items.push({
+      id: parsed.data.id,
+      name: parsed.data.name,
+      price: parsed.data.price,
+      quantity: parsed.data.quantity,
+      image: parsed.data.image,
+      size: parsed.data.size,
+      color: parsed.data.color,
+    })
+  }
+
+  return { items, dropped }
 }
 
 function CheckoutContent() {
@@ -150,13 +187,34 @@ function CheckoutContent() {
       router.push('/cart')
       return
     }
-    let cartItems: CartItem[] = []
+
+    let parsedCart: unknown
     try {
-      cartItems = JSON.parse(saved)
+      parsedCart = JSON.parse(saved)
     } catch (error) {
-      console.error('Failed to load cart:', error)
+      console.error('[Checkout] Failed to parse stored cart, treating it as empty:', error)
+      parsedCart = []
     }
-    if (cartItems.length === 0) {
+    // A non-array stored value is cart corruption — never reconcile or persist
+    // it. Reset the cart so a bad value can't be locked in or sent to the server.
+    if (!Array.isArray(parsedCart)) {
+      console.warn('[Checkout] Stored cart is not an array; resetting it.', parsedCart)
+      localStorage.setItem('cart', '[]')
+      router.push('/cart')
+      return
+    }
+    if (parsedCart.length === 0) {
+      router.push('/cart')
+      return
+    }
+
+    // Validate & normalize every parsed line-item before it can touch
+    // reconciliation or persistence. Items that don't match the cart schema are
+    // dropped and reported rather than propagated to localStorage or the server.
+    const { items: normalized, dropped: droppedInvalid } = normalizeCartItems(parsedCart)
+    if (normalized.length === 0) {
+      console.warn('[Checkout] Stored cart contained no valid items; resetting it.')
+      localStorage.setItem('cart', '[]')
       router.push('/cart')
       return
     }
@@ -164,9 +222,12 @@ function CheckoutContent() {
     let kept: CartItem[]
     let removed: string[]
     try {
-      const reconciled = await reconcileCart(cartItems)
+      const reconciled = await reconcileCart(normalized)
       kept = reconciled.kept
-      removed = reconciled.removed
+      // Report dropped-invalid line-items the same way as reconciled removals so
+      // the cleaned cart (with the invalid entries gone) is persisted and the
+      // customer is told what happened.
+      removed = [...droppedInvalid, ...reconciled.removed]
     } catch (error) {
       console.error('[Checkout] Cart reconciliation failed — blocking checkout until it recovers:', error)
       if (aborted()) return

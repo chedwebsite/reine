@@ -81,18 +81,20 @@ export const adminProductSchema = z.object({
 )
 
 // ─── Cart / Favorites ────────────────────────────────────────────
+// A single cart line-item. Shared by the server cart endpoint and the client
+// checkout page so both validate against the exact same shape.
+export const cartItemSchema = z.object({
+  id: z.string().min(1, 'Product ID is required'),
+  name: z.string().min(1, 'Product name is required'),
+  price: z.number().nonnegative('Price must be a non-negative number'),
+  quantity: z.number().int().positive('Quantity must be a positive integer'),
+  image: z.string().optional(),
+  size: z.string().optional(),
+  color: z.string().optional(),
+})
+
 export const cartUpdateSchema = z.object({
-  items: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      price: z.number(),
-      quantity: z.number().int().positive(),
-      image: z.string().optional(),
-      size: z.string().optional(),
-      color: z.string().optional(),
-    })
-  ),
+  items: z.array(cartItemSchema),
 })
 
 export const favoriteSchema = z.object({
