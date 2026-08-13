@@ -73,6 +73,11 @@ function LoginContent() {
           type: 'success',
           text: 'Your account has been created and you are signed in.',
         })
+        // Delay navigation briefly so the success message is actually seen
+        // before this component unmounts — otherwise router.push discards it
+        // instantly. The submit spinner stays active while we wait (loading is
+        // still true), which also prevents double-submission during the delay.
+        await new Promise<void>((resolve) => setTimeout(() => resolve(), 1500))
         router.push(next)
       } else {
         setMessage({ type: 'success', text: 'Check your email to confirm your account.' })
