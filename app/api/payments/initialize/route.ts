@@ -8,6 +8,24 @@ import { isOnSale } from '@/lib/pricing'
 
 export async function POST(request: NextRequest) {
   try {
+    // Fail fast if server-only secrets are missing. Local dev reads them from
+    // .env.local; Vercel requires them under Project Settings → Environment
+    // Variables and a redeploy. A missing value here surfaces as an opaque
+    // "Payment initialization failed" 500, so report the missing names in the
+    // server logs only — never leak internal configuration details to clients.
+    const missingEnv = ['SUPABASE_SERVICE_ROLE_KEY', 'PAYSTACK_SECRET_KEY'].filter(
+      (name) => !process.env[name]
+    )
+    if (missingEnv.length > 0) {
+      console.error('[API] Payment initialization blocked — missing env var(s):', missingEnv.join(', '))
+      return NextResponse.json(
+        {
+          error: 'Payment is temporarily unavailable. Please try again later.',
+        },
+        { status: 500 }
+      )
+    }
+
     // Rate limit: 10 payment initializations per minute per IP
     const rateError = applyRateLimit(request, 10, 60_000)
     if (rateError) return rateError

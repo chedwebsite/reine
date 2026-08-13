@@ -21,6 +21,12 @@ export interface VerifyPaymentParams {
 }
 
 export async function initializePayment(params: InitializePaymentParams) {
+  const secretKey = process.env.PAYSTACK_SECRET_KEY
+  if (!secretKey) {
+    throw new Error(
+      'PAYSTACK_SECRET_KEY is not set — add it to your server environment (Vercel → Project → Settings → Environment Variables → Redeploy).'
+    )
+  }
   try {
     const response = await paystackClient.post('/transaction/initialize', {
       email: params.email,
@@ -38,6 +44,12 @@ export async function initializePayment(params: InitializePaymentParams) {
 }
 
 export async function verifyPayment(params: VerifyPaymentParams) {
+  const secretKey = process.env.PAYSTACK_SECRET_KEY
+  if (!secretKey) {
+    throw new Error(
+      'PAYSTACK_SECRET_KEY is not set — add it to your server environment (Vercel → Project → Settings → Environment Variables → Redeploy).'
+    )
+  }
   try {
     const response = await paystackClient.get(`/transaction/verify/${params.reference}`)
     return response.data

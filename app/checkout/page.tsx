@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -33,6 +33,15 @@ function CheckoutContent() {
   const [error, setError] = useState<PaymentError | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [paymentSuccess, setPaymentSuccess] = useState(false)
+  // Set when the Supabase reconciliation query fails (network/RLS/schema error).
+  // The payment form is blocked until reconciliation succeeds so checkout never
+  // runs against a cart that couldn't be verified against live inventory.
+  const [reconcileError, setReconcileError] = useState<string | null>(null)
+  const [retryingReconcile, setRetryingReconcile] = useState(false)
+
+  // Guard against state updates after unmount; shared by the initial cart load
+  // and the manual "Try again" retry.
+  const cancelledRef = useRef(false)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -56,91 +65,7 @@ function CheckoutContent() {
     }
   }, [user])
 
-  useEffect(() => {
-    let cancelled = false
-    const supabase = createClient()
-
-    // Reconcile the localStorage cart against the live products table before
-    // showing it. The cart can go stale (a product edited/deleted, or the
-    // products table re-seeded after the item was added), and a stale id used
-    // to surface as a confusing "out of stock" 400 at payment time. Items that
-    // no longer exist or are out of stock are removed here and reported to the
-    // customer so checkout never fails on them again.
-    const reconcileCart = async (raw: CartItem[]) => {
-      const { data: products } = await supabase.from('products').select('id, name, in_stock')
-      if (!products) return { kept: raw, removed: [] }
-      const productById = new Map(products.map((p: any) => [p.id, p]))
-      const removed: string[] = []
-      const kept = raw.filter((item) => {
-        const product = productById.get(item.id)
-        if (!product) {
-          removed.push(`${item.name} (no longer available)`)
-          return false
-        }
-        if (product.in_stock === false) {
-          removed.push(`${item.name} (out of stock)`)
-          return false
-        }
-        return true
-      })
-      return { kept, removed }
-    }
-
-    ;(async () => {
-      // Load cart from localStorage
-      const saved = localStorage.getItem('cart')
-      if (!saved) {
-        router.push('/cart')
-        return
-      }
-      let cartItems: CartItem[] = []
-      try {
-        cartItems = JSON.parse(saved)
-      } catch (error) {
-        console.error('Failed to load cart:', error)
-      }
-      if (cartItems.length === 0) {
-        router.push('/cart')
-        return
-      }
-
-      const { kept, removed } = await reconcileCart(cartItems)
-      if (cancelled) return
-
-      if (removed.length > 0) {
-        // Persist the cleaned cart so the user doesn't re-trigger the error.
-        localStorage.setItem('cart', JSON.stringify(kept))
-        if (user) {
-          fetch('/api/cart', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ items: kept }),
-          }).catch(() => {})
-        }
-        setNotice(
-          `Some items could not be ordered and were removed from your cart: ${[...new Set(removed)].join(', ')}.`
-        )
-      }
-
-      if (kept.length === 0) {
-        setItems([])
-        router.push('/cart')
-        return
-      }
-      setItems(kept)
-
-      // Check if returning from payment
-      if (reference) {
-        verifyPaymentReference(reference)
-      }
-    })()
-
-    return () => {
-      cancelled = true
-    }
-  }, [reference, router, user])
-
-  const verifyPaymentReference = async (ref: string) => {
+  const verifyPaymentReference = useCallback(async (ref: string) => {
     try {
       setPaymentProcessing(true)
       const response = await fetch('/api/payments/verify', {
@@ -168,6 +93,142 @@ function CheckoutContent() {
     } finally {
       setPaymentProcessing(false)
     }
+  }, [router])
+
+  // Reconcile the localStorage cart against the live products table before
+  // showing it. The cart can go stale (a product edited/deleted, or the
+  // products table re-seeded after the item was added), and a stale id used
+  // to surface as a confusing "out of stock" 400 at payment time. Items that
+  // no longer exist or are out of stock are removed here and reported to the
+  // customer so checkout never fails on them again.
+  //
+  // Supabase returns `{ data, error }`, but only `data` was read before, so a
+  // network/RLS/schema failure was indistinguishable from "no products" and the
+  // stale (possibly invalid) cart silently sailed through to payment. Now the
+  // error is logged, and checkout is blocked with a "Try again" fallback until
+  // reconciliation succeeds — failing closed instead of reintroducing the
+  // stale-cart 400 at payment time.
+  const loadCartForCheckout = useCallback(async (signal?: { cancelled: boolean }) => {
+    const aborted = () => (signal ? signal.cancelled : cancelledRef.current)
+    setReconcileError(null)
+    const supabase = createClient()
+
+    const reconcileCart = async (raw: CartItem[]) => {
+      const { data: products, error } = await supabase
+        .from('products')
+        .select('id, name, in_stock')
+
+      if (error) {
+        console.error('[Checkout] Failed to reconcile cart against products table:', error)
+        throw new Error('We couldn\u2019t verify your cart against our current inventory.')
+      }
+      if (!products) {
+        console.error('[Checkout] Cart reconciliation returned no data (and no error).', error)
+        throw new Error('We couldn\u2019t verify your cart against our current inventory.')
+      }
+
+      const productById = new Map(products.map((p: any) => [p.id, p]))
+      const removed: string[] = []
+      const kept = raw.filter((item) => {
+        const product = productById.get(item.id)
+        if (!product) {
+          removed.push(`${item.name} (no longer available)`)
+          return false
+        }
+        if (product.in_stock === false) {
+          removed.push(`${item.name} (out of stock)`)
+          return false
+        }
+        return true
+      })
+      return { kept, removed }
+    }
+
+    // Load cart from localStorage
+    const saved = localStorage.getItem('cart')
+    if (!saved) {
+      router.push('/cart')
+      return
+    }
+    let cartItems: CartItem[] = []
+    try {
+      cartItems = JSON.parse(saved)
+    } catch (error) {
+      console.error('Failed to load cart:', error)
+    }
+    if (cartItems.length === 0) {
+      router.push('/cart')
+      return
+    }
+
+    let kept: CartItem[]
+    let removed: string[]
+    try {
+      const reconciled = await reconcileCart(cartItems)
+      kept = reconciled.kept
+      removed = reconciled.removed
+    } catch (error) {
+      console.error('[Checkout] Cart reconciliation failed — blocking checkout until it recovers:', error)
+      if (aborted()) return
+      setReconcileError(
+        error instanceof Error ? error.message : 'We couldn\u2019t verify your cart against our current inventory.'
+      )
+      // If the customer is returning from Paystack, still verify the payment —
+      // it already happened server-side and must not be hidden by a temporary
+      // products-query failure.
+      if (reference) {
+        await verifyPaymentReference(reference)
+      }
+      return
+    }
+    if (aborted()) return
+
+    if (removed.length > 0) {
+      // Persist the cleaned cart so the user doesn't re-trigger the error.
+      localStorage.setItem('cart', JSON.stringify(kept))
+      if (user) {
+        fetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: kept }),
+        }).catch(() => {})
+      }
+      setNotice(
+        `Some items could not be ordered and were removed from your cart: ${[...new Set(removed)].join(', ')}.`
+      )
+    }
+
+    if (kept.length === 0) {
+      setItems([])
+      router.push('/cart')
+      return
+    }
+    setItems(kept)
+
+    // Check if returning from payment
+    if (reference) {
+      await verifyPaymentReference(reference)
+    }
+  }, [reference, router, user, verifyPaymentReference])
+
+  useEffect(() => {
+    // Per-invocation cancellation so React StrictMode's double effect run does
+    // not let the first (stale) run commit state updates.
+    const signal = { cancelled: false }
+    void loadCartForCheckout(signal)
+    return () => {
+      signal.cancelled = true
+    }
+  }, [loadCartForCheckout])
+
+  const retryReconcile = async () => {
+    if (retryingReconcile) return
+    setRetryingReconcile(true)
+    try {
+      await loadCartForCheckout()
+    } finally {
+      setRetryingReconcile(false)
+    }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -177,6 +238,14 @@ function CheckoutContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Belt-and-suspenders: never let payment initialize against a cart that
+    // failed reconciliation. The form is hidden in that case, but this keeps
+    // the guarantee even if that screen is bypassed for any reason.
+    if (reconcileError) {
+      setError({ message: 'We couldn\u2019t verify your cart. Please use "Try again" before checking out.' })
+      return
+    }
     
     // Validate form
     if (!formData.email || !formData.fullName || !formData.phone || !formData.address) {
@@ -252,6 +321,48 @@ function CheckoutContent() {
           <h1 className="text-3xl font-display font-bold text-foreground">Payment Successful!</h1>
           <p className="text-muted-foreground">Your order has been confirmed. Redirecting...</p>
           <Loader2 className="w-5 h-5 animate-spin text-accent mx-auto" />
+        </div>
+      </main>
+    )
+  }
+
+  // Cart reconciliation failed (e.g. a Supabase network/RLS/schema error). The
+  // stored cart may be stale and could fail at payment time, so block checkout
+  // and let the customer retry after the momentary failure recovers. Safe
+  // fallback: never run payment against a cart we couldn't verify.
+  if (reconcileError) {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center border border-red-500/30 bg-red-500/10 rounded-sm p-8 space-y-5">
+          <div className="w-14 h-14 rounded-full bg-red-500/20 flex items-center justify-center mx-auto">
+            <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4m0 4h.01M10.3 3.86l-8.93 15.5c-.7 1.22.18 2.64 1.53 2.64h17.8c1.35 0 2.23-1.42 1.53-2.64L13.7 3.86a1.75 1.75 0 0 0-3.4 0z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-display font-bold text-foreground">
+            We couldn&apos;t verify your cart
+          </h1>
+          <p className="text-sm font-body text-red-500">{reconcileError}</p>
+          <p className="text-xs font-body text-muted-foreground">
+            Your cart has not been changed. Please try again, or go back to your cart and continue shopping.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+            <button
+              type="button"
+              onClick={retryReconcile}
+              disabled={retryingReconcile}
+              className="inline-flex items-center gap-2 bg-accent text-[#0a0a0a] py-3 px-6 rounded-sm font-display font-semibold hover:bg-accent/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {retryingReconcile && <Loader2 size={18} className="animate-spin" />}
+              {retryingReconcile ? 'Retrying...' : 'Try again'}
+            </button>
+            <Link
+              href="/cart"
+              className="text-sm font-body font-semibold text-muted-foreground hover:text-foreground underline underline-offset-4"
+            >
+              Back to cart
+            </Link>
+          </div>
         </div>
       </main>
     )
